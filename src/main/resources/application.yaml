@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/scoremanager
+    username: root
+    password: .lht@19961025.
+github:
+  client:
+    redirecturl: http://localhost:8080/callback
+    id: 2c51895939179fdfd18c
+    secret: bccdf43047598e2c7f67259ca87d4c05d728a538
