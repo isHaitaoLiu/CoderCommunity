@@ -85,6 +85,10 @@
             <version>1.2.76</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -99,6 +103,19 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>7.9.1</version>
+                <configuration>
+                    <url>jdbc:mysql://localhost:3306/codercommunity?useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=GMT</url>
+                    <user>root</user>
+                    <password>.lht@19961025.</password>
+                    <driver>com.mysql.cj.jdbc.Driver</driver>
                 </configuration>
             </plugin>
         </plugins>
