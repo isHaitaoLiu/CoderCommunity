@@ -1,4 +1,4 @@
-package cug.cs.codercommunity.Controller;
+package cug.cs.codercommunity.controller;
 
 
 import org.springframework.stereotype.Controller;
@@ -9,5 +9,10 @@ public class LoginController {
     @GetMapping("/")
     public String testController(){
         return "index";
+    }
+
+    @GetMapping("/publish")
+    public String publishController(){
+        return "publish";
     }
 }
