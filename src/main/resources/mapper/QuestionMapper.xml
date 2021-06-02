@@ -7,4 +7,7 @@
         insert question(title, description, gmt_create, gmt_modified, creator, comment_count, view_count, like_count, tag)
         values (#{title}, #{description}, #{gmtCreate}, #{gmtModified}, #{creator}, #{commentCount}, #{viewCount}, #{likeCount}, #{tag})
     </insert>
+    <select id="selectAllQuestion" resultType="cug.cs.codercommunity.model.Question">
+        select * from question
+    </select>
 </mapper>
