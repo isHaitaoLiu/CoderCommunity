@@ -48,8 +48,14 @@ public class QuestionServiceImpl implements QuestionService{
     }
 
     @Override
-    public PageDto getOnePage(Integer page, Integer size) {
-        Integer totalCount = questionMapper.selectCount();
+    public PageDto getOnePage(Integer page, Integer size, User user) {
+        Integer totalCount;
+        List<Question> questionList = new ArrayList<>();
+        if (user == null){
+            totalCount = questionMapper.selectCount();
+        }else {
+            totalCount = questionMapper.selectCountByCreator(user.getId());
+        }
         //开始为pageDto赋值
         PageDto pageDto = new PageDto();
         //计算总页数
@@ -84,19 +90,32 @@ public class QuestionServiceImpl implements QuestionService{
         //是否展示第一页、最后一页符号
         pageDto.setShowFirstPage(!pages.contains(1));
         pageDto.setShowLastPage(!pages.contains(pageDto.getTotalPage()));
-
         Integer offset = (page - 1) * size;
-        List<Question> questionList = questionMapper.selectOnePage(offset, size);
+        if (user == null){
+            questionList = questionMapper.selectOnePage(offset, size);
+        }else {
+            questionList = questionMapper.selectOnePageByCreator(user.getId(), offset, size);
+        }
         List<QuestionVO> questionVOList = new ArrayList<>();
         for (Question question : questionList) {
             QuestionVO questionVO = new QuestionVO();
-            User user = userMapper.selectUserById(question.getCreator());
+            User creator = userMapper.selectUserById(question.getCreator());
             BeanUtils.copyProperties(question, questionVO);
-            questionVO.setUser(user);
+            questionVO.setUser(creator);
             questionVOList.add(questionVO);
         }
         //放入question列表
         pageDto.setQuestionVOList(questionVOList);
         return pageDto;
+    }
+
+    @Override
+    public QuestionVO getQuestionById(Integer id) {
+        Question question = questionMapper.selectQuestionById(id);
+        User user = userMapper.selectUserById(question.getCreator());
+        QuestionVO questionVO = new QuestionVO();
+        BeanUtils.copyProperties(question, questionVO);
+        questionVO.setUser(user);
+        return questionVO;
     }
 }

@@ -11,5 +11,7 @@ public interface QuestionService {
 
     List<QuestionVO> getAllQuestionVO();
 
-    PageDto getOnePage(Integer page, Integer size);
+    PageDto getOnePage(Integer page, Integer size, User user);
+
+    QuestionVO getQuestionById(Integer id);
 }
