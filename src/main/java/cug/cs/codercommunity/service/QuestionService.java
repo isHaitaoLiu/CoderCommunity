@@ -14,4 +14,6 @@ public interface QuestionService {
     PageDto getOnePage(Integer page, Integer size, User user);
 
     QuestionVO getQuestionById(Integer id);
+
+    void updateQuestion(String title, String description, String tag, User user, Integer questionId);
 }

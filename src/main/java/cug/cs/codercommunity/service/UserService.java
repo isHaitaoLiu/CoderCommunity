@@ -8,4 +8,8 @@ public interface UserService {
 
 
     public User findUserByToken(String token);
+
+    User getUserByAccountId(String accountId);
+
+    void updateUser(GithubUser githubUser, String token, User user);
 }

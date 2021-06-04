@@ -4,6 +4,7 @@ import cug.cs.codercommunity.model.Question;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -27,4 +28,6 @@ public interface QuestionMapper {
 
     @Select("select * from question where id = #{id}")
     Question selectQuestionById(Integer id);
+
+    void updateQuestion(Question question);
 }

@@ -10,4 +10,9 @@
     <select id="selectAllQuestion" resultType="cug.cs.codercommunity.model.Question">
         select * from question
     </select>
+    <update id="updateQuestion">
+        update question
+        set title = #{title}, description = #{description}, tag = #{tag}, gmt_modified = #{gmtModified}
+        where id = #{id}
+    </update>
 </mapper>

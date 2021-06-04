@@ -118,4 +118,25 @@ public class QuestionServiceImpl implements QuestionService{
         questionVO.setUser(user);
         return questionVO;
     }
+
+    @Override
+    public void updateQuestion(String title, String description, String tag, User user, Integer questionId) {
+        Question question = questionMapper.selectQuestionById(questionId);
+        if (question == null){
+            question = new Question();
+            question.setCreator(user.getId());
+            question.setTitle(title);
+            question.setDescription(description);
+            question.setTag(tag);
+            question.setGmtCreate(System.currentTimeMillis());
+            question.setGmtModified(question.getGmtCreate());
+            questionMapper.insertQuestion(question);
+        }else {
+            question.setTitle(title);
+            question.setDescription(description);
+            question.setTag(tag);
+            question.setGmtModified(System.currentTimeMillis());
+            questionMapper.updateQuestion(question);
+        }
+    }
 }

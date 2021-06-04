@@ -18,6 +18,7 @@ public class QuestionController {
     public String question(@PathVariable(name = "id") Integer id,
                            Model model){
         QuestionVO question = questionService.getQuestionById(id);
+        model.addAttribute("question", question);
         return "question";
     }
 }

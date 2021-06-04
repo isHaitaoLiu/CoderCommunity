@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.server.Session;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -52,10 +53,27 @@ public class AuthorizeController {
         if(githubUser != null) {
             String token = UUID.randomUUID().toString();
             //用户信息写入数据库
-            userService.addUser(githubUser, token);
+            String accountId = String.valueOf(githubUser.getId());
+            User user = userService.getUserByAccountId(accountId);
+            if (user == null) {
+                userService.addUser(githubUser, token);
+            }
+            else {
+                userService.updateUser(githubUser, token, user);
+            }
             //构造cookie信息
             response.addCookie(new Cookie("token", token));
         }
+        return "redirect:/";
+    }
+
+    @GetMapping("/logout")
+    public String logout(HttpServletResponse response,
+                         HttpSession session){
+        session.removeAttribute("user");
+        Cookie cookie = new Cookie("token", null);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
         return "redirect:/";
     }
 }
