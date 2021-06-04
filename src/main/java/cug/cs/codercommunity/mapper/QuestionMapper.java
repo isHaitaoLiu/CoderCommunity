@@ -29,5 +29,5 @@ public interface QuestionMapper {
     @Select("select * from question where id = #{id}")
     Question selectQuestionById(Integer id);
 
-    void updateQuestion(Question question);
+    int updateQuestion(Question question);
 }

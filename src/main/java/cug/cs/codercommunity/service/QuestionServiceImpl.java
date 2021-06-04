@@ -1,6 +1,8 @@
 package cug.cs.codercommunity.service;
 
 import cug.cs.codercommunity.dto.PageDto;
+import cug.cs.codercommunity.exception.CustomException;
+import cug.cs.codercommunity.exception.CustomStatus;
 import cug.cs.codercommunity.mapper.QuestionMapper;
 import cug.cs.codercommunity.mapper.UserMapper;
 import cug.cs.codercommunity.model.Question;
@@ -50,7 +52,6 @@ public class QuestionServiceImpl implements QuestionService{
     @Override
     public PageDto getOnePage(Integer page, Integer size, User user) {
         Integer totalCount;
-        List<Question> questionList = new ArrayList<>();
         if (user == null){
             totalCount = questionMapper.selectCount();
         }else {
@@ -91,6 +92,7 @@ public class QuestionServiceImpl implements QuestionService{
         pageDto.setShowFirstPage(!pages.contains(1));
         pageDto.setShowLastPage(!pages.contains(pageDto.getTotalPage()));
         Integer offset = (page - 1) * size;
+        List<Question> questionList;
         if (user == null){
             questionList = questionMapper.selectOnePage(offset, size);
         }else {
@@ -112,6 +114,9 @@ public class QuestionServiceImpl implements QuestionService{
     @Override
     public QuestionVO getQuestionById(Integer id) {
         Question question = questionMapper.selectQuestionById(id);
+        if (question == null){
+            throw new CustomException(CustomStatus.QUESTION_NOT_FOUND);
+        }
         User user = userMapper.selectUserById(question.getCreator());
         QuestionVO questionVO = new QuestionVO();
         BeanUtils.copyProperties(question, questionVO);
@@ -136,7 +141,9 @@ public class QuestionServiceImpl implements QuestionService{
             question.setDescription(description);
             question.setTag(tag);
             question.setGmtModified(System.currentTimeMillis());
-            questionMapper.updateQuestion(question);
+            if (questionMapper.updateQuestion(question) == 0){
+                throw new CustomException(CustomStatus.QUESTION_NOT_FOUND);
+            }
         }
     }
 }
