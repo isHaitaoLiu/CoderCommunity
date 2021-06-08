@@ -66,8 +66,8 @@ public class QuestionServiceImpl implements QuestionService{
             pageDto.setTotalPage(totalCount / size + 1);
         }
         //非法页校正
-        if (page < 1) page = 1;
         if (page > pageDto.getTotalPage()) page = pageDto.getTotalPage();
+        if (page < 1) page = 1;
         //记录当前页
         pageDto.setCurrentPage(page);
         //计算当前分页状态栏记录的页码
@@ -145,5 +145,11 @@ public class QuestionServiceImpl implements QuestionService{
                 throw new CustomException(CustomStatus.QUESTION_NOT_FOUND);
             }
         }
+    }
+
+    @Override
+    public void incView(Integer id) {
+        Question question = questionMapper.selectQuestionById(id);
+        questionMapper.incViewCount(question);
     }
 }

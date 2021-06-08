@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cug.cs.codercommunity.mapper.CommentMapper">
+    <insert id="insertComment">
+        insert into comment(parent_id, type, commentator, gmt_create, gmt_modified, content)
+        values(#{parentId}, #{type}, #{commentator}, #{gmtCreate}, #{gmtModified}, #{content})
+    </insert>
+</mapper>

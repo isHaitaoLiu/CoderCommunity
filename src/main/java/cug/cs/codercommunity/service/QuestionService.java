@@ -7,7 +7,7 @@ import cug.cs.codercommunity.vo.QuestionVO;
 import java.util.List;
 
 public interface QuestionService {
-    public void creatQuestion(String title, String description, String tag, User user);
+    void creatQuestion(String title, String description, String tag, User user);
 
     List<QuestionVO> getAllQuestionVO();
 
@@ -16,4 +16,6 @@ public interface QuestionService {
     QuestionVO getQuestionById(Integer id);
 
     void updateQuestion(String title, String description, String tag, User user, Integer questionId);
+
+    void incView(Integer id);
 }

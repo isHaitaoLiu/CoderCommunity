@@ -1,5 +1,6 @@
 package cug.cs.codercommunity.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import cug.cs.codercommunity.model.Question;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
@@ -9,8 +10,8 @@ import org.apache.ibatis.annotations.Update;
 import java.util.List;
 
 @Mapper
-public interface QuestionMapper {
-    public void insertQuestion(Question question);
+public interface QuestionMapper{
+    void insertQuestion(Question question);
 
     List<Question> selectAllQuestion();
 
@@ -30,4 +31,10 @@ public interface QuestionMapper {
     Question selectQuestionById(Integer id);
 
     int updateQuestion(Question question);
+
+    @Update("update question set view_count = view_count + 1 where id = #{id}")
+    int incViewCount(Question question);
+
+    @Update("update question set comment_count = comment_count + 1 where id = #{id}")
+    void incCommentCount(Question question);
 }

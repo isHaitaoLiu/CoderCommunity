@@ -19,6 +19,7 @@ public class QuestionController {
                            Model model){
         QuestionVO question = questionService.getQuestionById(id);
         model.addAttribute("question", question);
+        questionService.incView(id);
         return "question";
     }
 }

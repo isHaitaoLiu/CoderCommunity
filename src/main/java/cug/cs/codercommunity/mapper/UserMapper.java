@@ -1,5 +1,6 @@
 package cug.cs.codercommunity.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import cug.cs.codercommunity.model.User;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
@@ -7,7 +8,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 @Mapper
-public interface UserMapper {
+public interface UserMapper{
 
     @Insert("insert into user(account_id, name, token, gmt_create, gmt_modified, avatar_url) " +
             "values(#{accountId}, #{name}, #{token}, #{gmtCreate}, #{gmtModified}, #{avatarUrl})")
