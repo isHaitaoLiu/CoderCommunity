@@ -9,6 +9,7 @@
     <script src="/js/jquery-3.6.0.min.js"></script>
     <script src="/js/bootstrap.min.js" type="application/javascript"></script>
     <script src="/js/community.js" type="application/javascript"></script>
+    <script src="/js/moment.js" type="application/javascript"></script>
 </head>
 
 <body>
@@ -28,10 +29,20 @@
                 <hr class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" th:text="${question.description}"></div>
                 <hr class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <a th:href="@{'/publish/'+${question.id}}" class="community-edit">
-                    <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
-                    编辑
-                </a>
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <a th:href="@{'/publish/'+${question.id}}" class="community-edit">
+                        <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
+                        编辑
+                    </a>
+                </div>
+                <!--标签-->
+                <hr class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <span class="question-tag" th:each="tag : ${question.tag.split(',')}">
+                        <a th:href="@{/(page=1,tag=${tag})}"
+                           th:text="${tag}" class="community-tag"></a>
+                    </span>
+                </div>
             </div>
             <!-- 回复 -->
             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -44,7 +55,7 @@
                         <div class="media-left">
                             <img class="media-object img-rounded" th:src="${comment.user.avatarUrl}">
                         </div>
-                        <div class="media-body">
+                        <div class="media-body" th:id="${'comment-body-'+comment.id}">
                             <h5 class="media-heading">
                                 <span th:text="${comment.user.name}"></span>
                             </h5>
@@ -53,8 +64,19 @@
                             </div>
                             <div class="comment-menu">
                                 <span class="glyphicon glyphicon-thumbs-up icon"></span>
-                                <span class="glyphicon glyphicon-comment icon"></span>
+                                <span class="glyphicon glyphicon-comment icon" th:data-id="${comment.id}" onclick="collapseComments(this)"></span>
                                 <span class="pull-right" th:text="${#dates.format(comment.gmtCreate, 'yyyy-MM-dd')}"></span>
+                            </div>
+                            <!-- 二级评论 -->
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 collapse sub-comments"
+                                 th:id="${'comment-'+comment.id}">
+                                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                    <input type="text" class="form-control" placeholder="评论一下……"
+                                           th:id="${'input-'+comment.id}">
+                                    <button type="button" class="btn btn-success pull-right" onclick="comment(this)"
+                                            th:data-id="${comment.id}">评论
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -79,7 +101,7 @@
                     </div>
                     <input type="hidden" id="question_id" th:value="${question.id}">
                     <textarea id="comment_content" class="form-control comment" rows="6"></textarea>
-                    <button type="button" class="btn btn-success" style="float: right;margin-bottom: 10px" onclick="postComment()">回复</button>
+                    <button type="button" class="btn btn-success" style="float: right;margin-bottom: 10px" onclick="post()">回复</button>
                 </div>
             </div>
         </div>
@@ -102,6 +124,11 @@
             <hr class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <h4>相关问题</h4>
+                <ul class="question-related">
+                    <li th:each="related : ${relatedQuestions}">
+                        <a th:href="@{'/question/'+ ${related.id}}" th:text="${related.title}"></a>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>

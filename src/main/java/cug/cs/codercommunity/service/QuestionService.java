@@ -18,4 +18,6 @@ public interface QuestionService {
     void updateQuestion(String title, String description, String tag, User user, Integer questionId);
 
     void incView(Integer id);
+
+    List<QuestionVO> getRelatedQuestions(QuestionVO questionVO);
 }

@@ -3,18 +3,19 @@ package cug.cs.codercommunity.controller;
 
 import cug.cs.codercommunity.dto.CommentDto;
 import cug.cs.codercommunity.dto.ResultDto;
+import cug.cs.codercommunity.enums.CommentType;
 import cug.cs.codercommunity.exception.CustomStatus;
 import cug.cs.codercommunity.model.Comment;
 import cug.cs.codercommunity.model.User;
 import cug.cs.codercommunity.service.CommentService;
+import cug.cs.codercommunity.vo.CommentVO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
+import java.util.List;
 
 @Controller
 public class CommentController {
@@ -44,5 +45,12 @@ public class CommentController {
         comment.setContent(commentDto.getContent());
         commentService.addComment(comment);
         return ResultDto.errorOf(CustomStatus.SUCCESS);
+    }
+
+    @ResponseBody
+    @GetMapping("/comment/{id}")
+    public ResultDto<List<CommentVO>> getSubComments(@PathVariable(name = "id") Integer id){
+        List<CommentVO> comments = commentService.findAllCommentsByTargetId(id, CommentType.COMMENT);
+        return ResultDto.okOf(comments);
     }
 }

@@ -8,12 +8,15 @@ import cug.cs.codercommunity.mapper.UserMapper;
 import cug.cs.codercommunity.model.Question;
 import cug.cs.codercommunity.model.User;
 import cug.cs.codercommunity.vo.QuestionVO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -151,5 +154,25 @@ public class QuestionServiceImpl implements QuestionService{
     public void incView(Integer id) {
         Question question = questionMapper.selectQuestionById(id);
         questionMapper.incViewCount(question);
+    }
+
+    @Override
+    public List<QuestionVO> getRelatedQuestions(QuestionVO questionVO) {
+        if (questionVO.getTag() == null){
+            return new ArrayList<>();
+        }
+        String[] tags = StringUtils.split(",");
+        String regexpTag = Arrays.stream(tags).collect(Collectors.joining("|"));
+        Question questionDbSearch = new Question();
+        questionDbSearch.setTag(regexpTag);
+        questionDbSearch.setId(questionVO.getId());
+        List<Question> relatedQuestions = questionMapper.selectRelated(questionDbSearch);
+
+        List<QuestionVO> relatedQuestionVO = relatedQuestions.stream().map(question -> {
+            QuestionVO qv = new QuestionVO();
+            BeanUtils.copyProperties(question, qv);
+            return qv;
+        }).collect(Collectors.toList());
+        return relatedQuestionVO;
     }
 }

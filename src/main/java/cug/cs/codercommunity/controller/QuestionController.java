@@ -1,6 +1,8 @@
 package cug.cs.codercommunity.controller;
 
 
+import cug.cs.codercommunity.enums.CommentType;
+import cug.cs.codercommunity.model.Question;
 import cug.cs.codercommunity.service.CommentService;
 import cug.cs.codercommunity.service.QuestionService;
 import cug.cs.codercommunity.vo.CommentVO;
@@ -24,9 +26,11 @@ public class QuestionController {
     public String question(@PathVariable(name = "id") Integer id,
                            Model model){
         QuestionVO question = questionService.getQuestionById(id);
-        List<CommentVO> commentVOList = commentService.findAllCommentsByQuestionId(id);
+        List<QuestionVO> relatedQuestions = questionService.getRelatedQuestions(question);
+        List<CommentVO> commentVOList = commentService.findAllCommentsByTargetId(id, CommentType.QUESTION);
         model.addAttribute("question", question);
         model.addAttribute("comments", commentVOList);
+        model.addAttribute("relatedQuestions", relatedQuestions);
         questionService.incView(id);
         return "question";
     }

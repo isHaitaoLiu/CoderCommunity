@@ -37,4 +37,6 @@ public interface QuestionMapper{
 
     @Update("update question set comment_count = comment_count + 1 where id = #{id}")
     void incCommentCount(Question question);
+
+    List<Question> selectRelated(Question question);
 }

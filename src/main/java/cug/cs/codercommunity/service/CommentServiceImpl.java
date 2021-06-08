@@ -64,12 +64,12 @@ public class CommentServiceImpl implements CommentService{
     }
 
     @Override
-    public List<CommentVO> findAllCommentsByQuestionId(Integer id) {
+    public List<CommentVO> findAllCommentsByTargetId(Integer id, CommentType commentType) {
         //查找该问题下的所有评论
         QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<>();
         commentQueryWrapper
                 .eq("parent_id", id)
-                .eq("type", CommentType.QUESTION.getType())
+                .eq("type", commentType.getType())
                 .orderByDesc("gmt_create");
 
         List<Comment> comments = commentMapper.selectList(commentQueryWrapper);
