@@ -30,6 +30,10 @@ body{
     margin-top: 15px;
 }
 
+.question-title{
+    margin-top: 25px;
+}
+
 .community-menu{
     font-size: 13px;
     color: #999;
@@ -42,4 +46,32 @@ body{
 .comment{
     margin-top: 10px;
     margin-bottom: 10px;
+}
+
+.comments{
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.comment-sp{
+    margin-top: 0;
+}
+
+
+.community-edit{
+    display: block;
+    color: #999;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+.comment-menu .icon{
+    margin-right: 6px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.comment-menu .icon:hover{
+    color: #499ef3;
 }

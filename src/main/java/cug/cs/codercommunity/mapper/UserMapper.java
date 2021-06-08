@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 @Mapper
-public interface UserMapper{
+public interface UserMapper extends BaseMapper<User>{
 
     @Insert("insert into user(account_id, name, token, gmt_create, gmt_modified, avatar_url) " +
             "values(#{accountId}, #{name}, #{token}, #{gmtCreate}, #{gmtModified}, #{avatarUrl})")

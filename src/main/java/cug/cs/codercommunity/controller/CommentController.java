@@ -7,6 +7,7 @@ import cug.cs.codercommunity.exception.CustomStatus;
 import cug.cs.codercommunity.model.Comment;
 import cug.cs.codercommunity.model.User;
 import cug.cs.codercommunity.service.CommentService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +28,10 @@ public class CommentController {
         User user = (User) session.getAttribute("user");
         if (user == null){
             return ResultDto.errorOf(CustomStatus.NOT_LOGIN);
+        }
+
+        if (commentDto == null || StringUtils.isAllBlank(commentDto.getContent())){
+            return ResultDto.errorOf(CustomStatus.CONTENT_IS_EMPTY);
         }
 
         Comment comment = new Comment();
