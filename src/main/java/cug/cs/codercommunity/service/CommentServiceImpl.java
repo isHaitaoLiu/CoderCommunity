@@ -3,12 +3,16 @@ package cug.cs.codercommunity.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import cug.cs.codercommunity.enums.CommentType;
+import cug.cs.codercommunity.enums.NotificationStatusEnum;
+import cug.cs.codercommunity.enums.NotificationTypeEnum;
 import cug.cs.codercommunity.exception.CustomExceptionToJson;
 import cug.cs.codercommunity.exception.CustomStatus;
 import cug.cs.codercommunity.mapper.CommentMapper;
+import cug.cs.codercommunity.mapper.NotificationMapper;
 import cug.cs.codercommunity.mapper.QuestionMapper;
 import cug.cs.codercommunity.mapper.UserMapper;
 import cug.cs.codercommunity.model.Comment;
+import cug.cs.codercommunity.model.Notification;
 import cug.cs.codercommunity.model.Question;
 import cug.cs.codercommunity.model.User;
 import cug.cs.codercommunity.vo.CommentVO;
@@ -23,11 +27,13 @@ import java.util.stream.Collectors;
 @Service
 public class CommentServiceImpl implements CommentService{
     @Autowired
-    CommentMapper commentMapper;
+    private CommentMapper commentMapper;
     @Autowired
-    QuestionMapper questionMapper;
+    private QuestionMapper questionMapper;
     @Autowired
-    UserMapper userMapper;
+    private UserMapper userMapper;
+    @Autowired
+    private NotificationMapper notificationMapper;
 
     @Transactional
     @Override
@@ -48,19 +54,44 @@ public class CommentServiceImpl implements CommentService{
         }
 
         if (c == CommentType.COMMENT){
+            //回复评论
             Comment dbComment = commentMapper.selectById(comment.getParentId());
             if (dbComment == null){
                 throw new CustomExceptionToJson(CustomStatus.COMMENT_NOT_FOUND);
             }
+            //查询问题，以便放入通知中
+            Question question = questionMapper.selectQuestionById(dbComment.getParentId());
+            if (question == null){
+                throw new CustomExceptionToJson(CustomStatus.QUESTION_NOT_FOUND);
+            }
+
             commentMapper.insert(comment);
+
+            //进行通知
+            createNotification(comment, dbComment.getCommentator(), NotificationTypeEnum.REPLY_COMMENT, question);
         }else {
+            //回复问题
             Question question = questionMapper.selectQuestionById(comment.getParentId());
             if (question == null){
                 throw new CustomExceptionToJson(CustomStatus.QUESTION_NOT_FOUND);
             }
             commentMapper.insert(comment);
             questionMapper.incCommentCount(question);
+            //进行通知
+            createNotification(comment, question.getCreator(), NotificationTypeEnum.REPLY_QUESTION, question);
         }
+    }
+
+    @Override
+    public void createNotification(Comment comment, Integer receiver, NotificationTypeEnum typeEnum, Question question){
+        Notification notification = new Notification();
+        notification.setNotifier(comment.getCommentator());
+        notification.setReceiver(receiver);
+        notification.setOuterId(question.getId());
+        notification.setType(typeEnum.getType());
+        notification.setGmtCreate(System.currentTimeMillis());
+        notification.setStatus(NotificationStatusEnum.UNREAD.getStatus());
+        notificationMapper.insert(notification);
     }
 
     @Override

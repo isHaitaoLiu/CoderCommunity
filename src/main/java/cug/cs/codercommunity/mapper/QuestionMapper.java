@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Update;
 import java.util.List;
 
 @Mapper
-public interface QuestionMapper{
+public interface QuestionMapper extends BaseMapper<Question>{
     void insertQuestion(Question question);
 
     List<Question> selectAllQuestion();

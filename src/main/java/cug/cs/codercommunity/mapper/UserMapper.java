@@ -25,4 +25,6 @@ public interface UserMapper extends BaseMapper<User>{
 
     @Update("update user set name = #{name}, token = #{token}, gmt_modified = #{gmtModified}, avatar_url = #{avatarUrl} where id = #{id}")
     void updateUser(User user);
+
+
 }

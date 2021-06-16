@@ -1,6 +1,7 @@
 package cug.cs.codercommunity.interceptor;
 
 import cug.cs.codercommunity.model.User;
+import cug.cs.codercommunity.service.NotificationService;
 import cug.cs.codercommunity.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,7 +14,9 @@ import javax.servlet.http.HttpServletResponse;
 @Component
 public class SessionInterceptor implements HandlerInterceptor {
     @Autowired
-    UserService userService;
+    private UserService userService;
+    @Autowired
+    private NotificationService notificationService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -25,6 +28,8 @@ public class SessionInterceptor implements HandlerInterceptor {
                     User user = userService.findUserByToken(token);
                     if (user != null){
                         request.getSession().setAttribute("user", user);
+                        Integer count = notificationService.unreadCount(user.getId());
+                        request.getSession().setAttribute("unreadCount", count);
                         break;
                     }
                 }

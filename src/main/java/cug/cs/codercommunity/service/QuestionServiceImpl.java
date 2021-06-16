@@ -53,7 +53,7 @@ public class QuestionServiceImpl implements QuestionService{
     }
 
     @Override
-    public PageDto getOnePage(Integer page, Integer size, User user) {
+    public PageDto<QuestionVO> getOnePage(Integer page, Integer size, User user) {
         Integer totalCount;
         if (user == null){
             totalCount = questionMapper.selectCount();
@@ -61,7 +61,7 @@ public class QuestionServiceImpl implements QuestionService{
             totalCount = questionMapper.selectCountByCreator(user.getId());
         }
         //开始为pageDto赋值
-        PageDto pageDto = new PageDto();
+        PageDto<QuestionVO> pageDto = new PageDto<>();
         //计算总页数
         if (totalCount % size == 0){
             pageDto.setTotalPage(totalCount / size);
@@ -110,7 +110,7 @@ public class QuestionServiceImpl implements QuestionService{
             questionVOList.add(questionVO);
         }
         //放入question列表
-        pageDto.setQuestionVOList(questionVOList);
+        pageDto.setData(questionVOList);
         return pageDto;
     }
 

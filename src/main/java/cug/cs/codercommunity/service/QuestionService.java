@@ -1,6 +1,7 @@
 package cug.cs.codercommunity.service;
 
 import cug.cs.codercommunity.dto.PageDto;
+import cug.cs.codercommunity.model.Question;
 import cug.cs.codercommunity.model.User;
 import cug.cs.codercommunity.vo.QuestionVO;
 
@@ -11,7 +12,7 @@ public interface QuestionService {
 
     List<QuestionVO> getAllQuestionVO();
 
-    PageDto getOnePage(Integer page, Integer size, User user);
+    PageDto<QuestionVO> getOnePage(Integer page, Integer size, User user);
 
     QuestionVO getQuestionById(Integer id);
 
