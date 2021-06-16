@@ -1,6 +1,7 @@
 package cug.cs.codercommunity.controller;
 
 
+import cug.cs.codercommunity.cache.HotTopicCache;
 import cug.cs.codercommunity.dto.PageDto;
 import cug.cs.codercommunity.model.User;
 import cug.cs.codercommunity.service.QuestionService;
@@ -27,6 +28,9 @@ public class IndexController {
     @Autowired
     QuestionService questionService;
 
+    @Autowired
+    private HotTopicCache hotTopicCache;
+
     @GetMapping("/")
     public String index(Model model,
                         @RequestParam(name = "page", defaultValue = "1") Integer page,
@@ -34,6 +38,8 @@ public class IndexController {
         //List<QuestionVO> questionVOList = questionService.getAllQuestionVO();
         PageDto pagination = questionService.getOnePage(page, size, null);
         model.addAttribute("pagination", pagination);
+        List<String> tags = hotTopicCache.getHots();
+        model.addAttribute("tags", tags);
         return "index";
     }
 }

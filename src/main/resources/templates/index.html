@@ -78,6 +78,11 @@
         </div>
         <div class="col-lg-3 col-md-12 col-sm-12 col-xs-12">
             <h3>热门话题</h3>
+            <ul class="question-related">
+                <li th:each="tag : ${tags}">
+                    <span th:text="${tag}"></span>
+                </li>
+            </ul>
         </div>
     </div>
 </div>

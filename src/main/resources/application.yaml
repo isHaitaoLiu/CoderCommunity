@@ -17,3 +17,17 @@ github:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
+
+logging:
+  file:      # 日志记录位置
+    name: logs/coderCommunity.log
+  level:      # 日志级别
+    root: info
+#    cug:
+#      cs:
+#        codercommunity:
+#          mapper: debug  # 可以为不同的模块定义不同的日志级别
+  logback:
+    rollingpolicy:
+      max-file-size: 200MB   # 日志最大文件大小
+      max-history: 30       # 日志记录的最大天数
