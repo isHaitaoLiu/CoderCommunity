@@ -1,7 +1,7 @@
 # 1. CoderCommunity
 - [码问社区](https://github.com/codedrinker/community) 项目的翻版。是一个开源论坛，现有功能提问、回复和二级回复、通知、最热问题排行等功能。
 - 技术栈：Spring boot、Mybatis、Mysql、BootStrap、Ajax、Thymeleaf
-# 2. 相关工具及介绍
+# 2. 相关工具及依赖
 1. OAuth
     - OAuth 是一个开放标准，该标准允许用户让第三方应用访问该用户在某一网站上存储的私密资源（如头像、照片、视频等），而在这个过程中无需将用户名和密码提供给第三方应用。实现这一功能是通过提供一个令牌（token），而不是用户名和密码来访问他们存放在特定服务提供者的数据。采用令牌（token）的方式可以让用户灵活的对第三方应用授权或者收回权限。OAuth2 是 OAuth 协议的下一版本。
     - OAuth2授权码模式步骤
@@ -32,6 +32,13 @@
         5. scope：表示权限范围，如果与客户端申请的范围一致，此项可省略。
     - [创建 OAuth 应用程序步骤文档](https://docs.github.com/en/developers/apps/building-oauth-apps/creating-an-oauth-app)
     - [授权 OAuth 应用程序步骤文档](https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps)
+- [Flyway](https://flywaydb.org/getstarted/firststeps/maven):数据库变更版本控制工具(maven引入)
+- [Bootstrap](https://getbootstrap.com/) : 前端组件框架
+- [Thymeleaf](https://www.thymeleaf.org/) : 模版引擎(maven引入)
+- [Markdown 插件](https://pandao.github.io/editor.md/en.html) : 为页面提供富文本编辑器支持
+- [okhttp3](https://square.github.io/okhttp/) : 后端发起请求的实用工具(maven引入)
+- [fasjson](https://github.com/alibaba/fastjson) : json处理(maven引入)
+- [commons-lang3](https://mvnrepository.com/artifact/org.apache.commons/commons-lang3):为时间、字符串、日期、枚举等提供一些基础的、通用的操作和处理(maven引入)
 # 3. 项目开发记录文档
 ## 3.0 数据库设计
 - 用户表：存储从github获取的用户信息，包括唯一id、用户名、access_token、头像、创建和修改时间等
@@ -107,7 +114,25 @@
         - 验证用户登录信息、验证评论是否合法，不合法将返回json格式错误码
         - 将此条评论写入数据库，返回json格式成功码
 ## 3.4 通知功能
+- 前端
+    - 在导航栏设置一个通知按钮，旁边显示通知条数
+    - 通知按钮点击将进入profile页面，显示最新回复列表或者我的提问列表(由右侧导航栏决定)
+    - 进入最新回复列表后，每个未读消息旁边都会有一个未读按钮，读取之后将消失
+- 后端
+    - 在创建评论对象写入数据库之后，创建一条消息对象，写入数据库，状态为未读，同时记录通知者、接收者、通知具体信息、时间等
+    - 在用户进入profile页面点击某条未读消息时，将导向到那个问题详情页面，并将通知状态修改未已读
 ## 3.5 热门话题功能
+- 前端
+    - 在主页右侧导航栏显示近期热度最高的话题
+- 后端
+    - 使用定时器定时计算各个问题的热度
+    - 热度计算完成后，使用优先级队列对问题进行排序，更新topN话题
 ## 3.6 其他
-- 登录拦截器
+- 全局拦截器
+    - 除了静态资源都会被全局拦截器拦截
+    - 拦截处理用户登录情况，检查cookie中token字段的值，如果在数据库能找到对应的用户，表明用户是合法登录的，将用户信息写入session
+    - 拦截处理通知情况，在检查到用户合法登录时，去数据库检索该用户的未读通知数
 - 全局异常处理器
+    - 添加自定义状态枚举类，枚举类对象包括两个属性(code, message)
+    - 添加**两个**自定义异常类，两个属性(code, message)，构造函数传入上述自定义的枚举类
+    - 添加异常处理类，分别处理两种异常，一种直接返回error页面，一种返回json格式数据
