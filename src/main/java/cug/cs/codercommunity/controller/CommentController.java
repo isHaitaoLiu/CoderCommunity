@@ -2,7 +2,7 @@ package cug.cs.codercommunity.controller;
 
 
 import cug.cs.codercommunity.dto.CommentDto;
-import cug.cs.codercommunity.dto.ResultDto;
+import cug.cs.codercommunity.dto.JsonResult;
 import cug.cs.codercommunity.enums.CommentType;
 import cug.cs.codercommunity.exception.CustomStatus;
 import cug.cs.codercommunity.model.Comment;
@@ -24,15 +24,17 @@ public class CommentController {
 
     @ResponseBody
     @PostMapping("/comment")
-    public Object postComment(@RequestBody CommentDto commentDto,
+    public JsonResult<Void> postComment(@RequestBody CommentDto commentDto,
                               HttpSession session){
         User user = (User) session.getAttribute("user");
         if (user == null){
-            return ResultDto.errorOf(CustomStatus.NOT_LOGIN);
+            //return JsonResult.errorOf(CustomStatus.NOT_LOGIN);
+            return new JsonResult<>(CustomStatus.NOT_LOGIN);
         }
 
         if (commentDto == null || StringUtils.isAllBlank(commentDto.getContent())){
-            return ResultDto.errorOf(CustomStatus.CONTENT_IS_EMPTY);
+            //return JsonResult.errorOf(CustomStatus.CONTENT_IS_EMPTY);
+            return new JsonResult<>(CustomStatus.CONTENT_IS_EMPTY);
         }
 
         Comment comment = new Comment();
@@ -44,13 +46,15 @@ public class CommentController {
         //comment.setLikeCount(0);
         comment.setContent(commentDto.getContent());
         commentService.addComment(comment);
-        return ResultDto.errorOf(CustomStatus.SUCCESS);
+        //return JsonResult.errorOf(CustomStatus.SUCCESS);
+        return new JsonResult<>(CustomStatus.SUCCESS);
     }
 
     @ResponseBody
     @GetMapping("/comment/{id}")
-    public ResultDto<List<CommentVO>> getSubComments(@PathVariable(name = "id") Integer id){
+    public JsonResult<List<CommentVO>> getSubComments(@PathVariable(name = "id") Integer id){
         List<CommentVO> comments = commentService.findAllCommentsByTargetId(id, CommentType.COMMENT);
-        return ResultDto.okOf(comments);
+        //return JsonResult.okOf(comments);
+        return new JsonResult<>(CustomStatus.SUCCESS, comments);
     }
 }
