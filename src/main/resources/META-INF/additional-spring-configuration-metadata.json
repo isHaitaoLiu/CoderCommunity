@@ -1,0 +1,28 @@
+{
+  "properties": [
+    {
+      "name": "github.client.redirect-url",
+      "type": "java.lang.String",
+      "description": "Description for github.client.redirect-url."
+    },
+    {
+      "name": "github.client.id",
+      "type": "java.lang.String",
+      "description": "Description for github.client.id."
+    },
+    {
+      "name": "github.client.secret",
+      "type": "java.lang.String",
+      "description": "Description for github.client.secret."
+    },
+    {
+      "name": "github.client.access-token-url",
+      "type": "java.lang.String",
+      "description": "Description for github.client.access-token-url."
+    },
+    {
+      "name": "github.client.user-info-url",
+      "type": "java.lang.String",
+      "description": "Description for github.client.user-info-url."
+    }
+  ] }

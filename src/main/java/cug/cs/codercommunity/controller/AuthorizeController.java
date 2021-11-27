@@ -24,7 +24,7 @@ public class AuthorizeController {
     private GithubProvider githubProvider;
 
     //从配置文件中注入
-    @Value("${github.client.redirecturl}")
+    @Value("${github.client.redirect-url}")
     String redirectUrl;
     @Value("${github.client.id}")
     String clientId;

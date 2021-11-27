@@ -9,11 +9,16 @@ spring:
     clean-disabled: true # 禁止清理数据表
     locations: classpath:db/migration
     baseline-version: 1
+
 github:
   client:
-    redirecturl: http://localhost:8080/callback
+    redirect-url: http://localhost:8080/callback
     id: 2c51895939179fdfd18c
     secret: a1aca8b1b2ee7df986d5d58ae500c6412af52c19
+    access-token-url: https://github.com/login/oauth/access_token
+    user-info-url: https://api.github.com/user
+
+
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
