@@ -3,6 +3,7 @@ package cug.cs.codercommunity.interceptor;
 import cug.cs.codercommunity.model.User;
 import cug.cs.codercommunity.service.NotificationService;
 import cug.cs.codercommunity.service.UserService;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -21,7 +22,7 @@ public class SessionInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         Cookie[] cookies = request.getCookies();
-        if (cookies != null){
+        if (ArrayUtils.isNotEmpty(cookies)){
             for (Cookie cookie : cookies) {
                 if ("token".equals(cookie.getName())) {
                     String token = cookie.getValue();

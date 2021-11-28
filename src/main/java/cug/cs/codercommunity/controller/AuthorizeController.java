@@ -1,15 +1,13 @@
 package cug.cs.codercommunity.controller;
 
-import cug.cs.codercommunity.model.User;
-import cug.cs.codercommunity.provider.GithubProvider;
 import cug.cs.codercommunity.dto.AccessTokenDto;
 import cug.cs.codercommunity.dto.GithubUser;
+import cug.cs.codercommunity.model.User;
+import cug.cs.codercommunity.provider.GithubProvider;
 import cug.cs.codercommunity.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.servlet.server.Session;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -22,6 +20,8 @@ import java.util.UUID;
 public class AuthorizeController {
     @Autowired
     private GithubProvider githubProvider;
+    @Autowired
+    private UserService userService;
 
     //从配置文件中注入
     @Value("${github.client.redirect-url}")
@@ -30,8 +30,6 @@ public class AuthorizeController {
     String clientId;
     @Value("${github.client.secret}")
     String clientSecret;
-    @Autowired
-    UserService userService;
 
     //github的回调处理
     @GetMapping("/callback")
@@ -68,8 +66,7 @@ public class AuthorizeController {
     }
 
     @GetMapping("/logout")
-    public String logout(HttpServletResponse response,
-                         HttpSession session){
+    public String logout(HttpSession session, HttpServletResponse response){
         session.removeAttribute("user");
         Cookie cookie = new Cookie("token", null);
         cookie.setMaxAge(0);

@@ -3,7 +3,6 @@ package cug.cs.codercommunity.controller;
 
 import cug.cs.codercommunity.dto.NotificationDto;
 import cug.cs.codercommunity.dto.PageDto;
-import cug.cs.codercommunity.model.Question;
 import cug.cs.codercommunity.model.User;
 import cug.cs.codercommunity.service.NotificationService;
 import cug.cs.codercommunity.service.QuestionService;
@@ -25,7 +24,7 @@ public class ProfileController {
     private NotificationService notificationService;
 
     @GetMapping("/profile/{action}")
-    public String profile( HttpSession session,
+    public String profile(HttpSession session,
                           Model model,
                           @PathVariable(name = "action") String action,
                           @RequestParam(name = "page", defaultValue = "1") Integer page,

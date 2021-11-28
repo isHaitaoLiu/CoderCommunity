@@ -60,11 +60,13 @@ public class GithubProvider {
                 .builder()
                 .baseUrl(userInfoUrl)
                 .build();
-        Mono<String> response = webClient
+        Mono<String> stringMono = webClient
                 .get()
                 .header("Authorization", "token " + accessToken)  //请求header构造
-                .retrieve().bodyToMono(String.class);
-        GithubUser githubUser = JSON.parseObject(response.block(), GithubUser.class); //Json化，存储到实体类
+                .retrieve()
+                .bodyToMono(String.class);
+        String response = stringMono.block();
+        GithubUser githubUser = JSON.parseObject(response, GithubUser.class); //Json化，存储到实体类
         log.info("userInfo返回结果：[{}]", githubUser);
         return githubUser;
     }

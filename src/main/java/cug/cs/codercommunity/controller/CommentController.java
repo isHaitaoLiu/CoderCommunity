@@ -20,20 +20,18 @@ import java.util.List;
 @Controller
 public class CommentController {
     @Autowired
-    CommentService commentService;
+    private CommentService commentService;
 
     @ResponseBody
     @PostMapping("/comment")
     public JsonResult<Void> postComment(@RequestBody CommentDto commentDto,
-                              HttpSession session){
+                                        HttpSession session){
         User user = (User) session.getAttribute("user");
         if (user == null){
-            //return JsonResult.errorOf(CustomStatus.NOT_LOGIN);
             return new JsonResult<>(CustomStatus.NOT_LOGIN);
         }
 
         if (commentDto == null || StringUtils.isAllBlank(commentDto.getContent())){
-            //return JsonResult.errorOf(CustomStatus.CONTENT_IS_EMPTY);
             return new JsonResult<>(CustomStatus.CONTENT_IS_EMPTY);
         }
 
@@ -46,7 +44,6 @@ public class CommentController {
         //comment.setLikeCount(0);
         comment.setContent(commentDto.getContent());
         commentService.addComment(comment);
-        //return JsonResult.errorOf(CustomStatus.SUCCESS);
         return new JsonResult<>(CustomStatus.SUCCESS);
     }
 
@@ -54,7 +51,6 @@ public class CommentController {
     @GetMapping("/comment/{id}")
     public JsonResult<List<CommentVO>> getSubComments(@PathVariable(name = "id") Integer id){
         List<CommentVO> comments = commentService.findAllCommentsByTargetId(id, CommentType.COMMENT);
-        //return JsonResult.okOf(comments);
         return new JsonResult<>(CustomStatus.SUCCESS, comments);
     }
 }

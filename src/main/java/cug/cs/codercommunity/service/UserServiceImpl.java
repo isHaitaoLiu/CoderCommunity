@@ -6,8 +6,6 @@ import cug.cs.codercommunity.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -20,7 +18,7 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public void addUser(GithubUser githubUser, String token) {
+    public User addUser(GithubUser githubUser, String token) {
         User user = new User();
         user.setToken(token);
         user.setName(githubUser.getName());
@@ -29,15 +27,17 @@ public class UserServiceImpl implements UserService{
         user.setGmtModified(user.getGmtCreate());
         user.setAvatarUrl(githubUser.getAvatar_url());
         userMapper.insertUser(user);
+        return user;
     }
 
     @Override
-    public void updateUser(GithubUser githubUser, String token, User user){
+    public User updateUser(GithubUser githubUser, String token, User user){
         user.setToken(token);
         user.setName(githubUser.getName());
         user.setGmtModified(System.currentTimeMillis());
         user.setAvatarUrl(githubUser.getAvatar_url());
         userMapper.updateUser(user);
+        return user;
     }
 
     @Override

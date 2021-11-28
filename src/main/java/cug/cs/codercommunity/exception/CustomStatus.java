@@ -9,7 +9,8 @@ public enum CustomStatus {
     CONTENT_IS_EMPTY(2006, "内容不能为空！"),
     READ_NOTIFICATION_FILE(2007, "无法读取他人通知！"),
     NOTIFICATION_NOT_FOUND(2008, "通知不翼而飞了！"),
-    SUCCESS(200, "请求成功！");
+    SUCCESS(200, "请求成功！"),
+    LOGIN_FAILED(2009, "登录失败");
 
     private final int code;
     private final String message;

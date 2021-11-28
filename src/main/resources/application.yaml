@@ -3,12 +3,18 @@ spring:
     url: jdbc:mysql://localhost:3306/codercommunity
     username: root
     password: .lht@19961025.
+    type: com.alibaba.druid.pool.DruidDataSource
   flyway:
     enabled: true
     baseline-on-migrate: true  # 数据库不是空，需要设置为true
     clean-disabled: true # 禁止清理数据表
     locations: classpath:db/migration
     baseline-version: 1
+  redis:
+    host: 121.196.148.198
+    port: 6379
+    database: 1
+    connect-timeout: 10000ms
 
 github:
   client:

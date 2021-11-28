@@ -10,7 +10,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 @Controller
@@ -19,7 +18,8 @@ public class NotificationController {
     private NotificationService notificationService;
 
     @GetMapping("/notification/{id}")
-    public String profile(HttpSession session, @PathVariable(name = "id") Integer id){
+    public String profile(HttpSession session,
+                          @PathVariable(name = "id") Integer id){
         User user = (User) session.getAttribute("user");
         if (user == null){
             return "redirect:/";
