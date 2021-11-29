@@ -26,7 +26,7 @@ public class HotTopics {
     public void hotTopicSchedule(){
         int offset = 0;
         int limit = 20;
-        log.info("hotTopicsSchedule start {}", new Date());
+        log.info("======= 热门问题统计定时任务开始，时间：{} ======", new Date());
         List<Question> list = new ArrayList<>();
         Map<String, Integer> priorities = new HashMap<>();
         while (offset == 0 || list.size() == limit){
@@ -47,6 +47,6 @@ public class HotTopics {
         }
         hotTopicCache.setTags(priorities);
         hotTopicCache.updateTop();
-        log.info("hotTopicsSchedule stop {}", new Date());
+        log.info("======= 热门问题统计定时任务结束，时间：{} ======", new Date());
     }
 }

@@ -11,21 +11,33 @@ import cug.cs.codercommunity.vo.QuestionVO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
 @Service
 public class QuestionServiceImpl implements QuestionService{
     @Autowired
-    QuestionMapper questionMapper;
+    private QuestionMapper questionMapper;
     @Autowired
-    UserMapper userMapper;
+    private UserMapper userMapper;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
+
+    /*
+     * @Author sakura
+     * @Description 创建问题
+     * @Date 2021/11/28
+     * @Param [title, description, tag, user]
+     * @return void
+     **/
     @Override
     public void creatQuestion(String title, String description, String tag, User user) {
         Question question = new Question();
@@ -52,6 +64,13 @@ public class QuestionServiceImpl implements QuestionService{
         return questionVOList;
     }
 
+    /**
+     * @Author sakura
+     * @Description 查询一页question
+     * @Date 2021/11/28
+     * @Param [page, size, user]
+     * @return cug.cs.codercommunity.dto.PageDto<cug.cs.codercommunity.vo.QuestionVO>
+     **/
     @Override
     public PageDto<QuestionVO> getOnePage(Integer page, Integer size, User user) {
         Integer totalCount;
@@ -103,10 +122,8 @@ public class QuestionServiceImpl implements QuestionService{
         }
         List<QuestionVO> questionVOList = new ArrayList<>();
         for (Question question : questionList) {
-            QuestionVO questionVO = new QuestionVO();
             User creator = userMapper.selectUserById(question.getCreator());
-            BeanUtils.copyProperties(question, questionVO);
-            questionVO.setUser(creator);
+            QuestionVO questionVO = Question2QuestionVO(question, creator, user, redisTemplate);
             questionVOList.add(questionVO);
         }
         //放入question列表
@@ -114,16 +131,46 @@ public class QuestionServiceImpl implements QuestionService{
         return pageDto;
     }
 
+    /**
+     * @Author sakura
+     * @Description 通过问题ID获取questionVO
+     * @Date 2021/11/28
+     * @Param [id, user]
+     * @return cug.cs.codercommunity.vo.QuestionVO
+     **/
     @Override
-    public QuestionVO getQuestionById(Integer id) {
+    public QuestionVO getQuestionById(Integer id, User user) {
         Question question = questionMapper.selectQuestionById(id);
         if (question == null){
             throw new CustomException(CustomStatus.QUESTION_NOT_FOUND);
         }
-        User user = userMapper.selectUserById(question.getCreator());
+        User creator = userMapper.selectUserById(question.getCreator());
+        return Question2QuestionVO(question, creator, user, redisTemplate);
+    }
+
+
+    /**
+     * @Author sakura
+     * @Description question转questionVO
+     * @Date 2021/11/28
+     * @Param [question, creator, user, redisTemplate]
+     * @return cug.cs.codercommunity.vo.QuestionVO
+     **/
+    @Override
+    public QuestionVO Question2QuestionVO(Question question, User creator, User user, RedisTemplate<String, Object> redisTemplate){
         QuestionVO questionVO = new QuestionVO();
         BeanUtils.copyProperties(question, questionVO);
-        questionVO.setUser(user);
+        questionVO.setUser(creator);
+        //设置点赞状态
+        Object likeObj = null;
+        if (user != null){
+            likeObj = redisTemplate.opsForHash().get("REDIS_MAP_LIKE", user.getId() + ":" + question.getId());
+        }
+        if (likeObj == null){
+            questionVO.setLikeStatus(0);
+        }else {
+            questionVO.setLikeStatus((Integer)likeObj);
+        }
         return questionVO;
     }
 
@@ -174,5 +221,20 @@ public class QuestionServiceImpl implements QuestionService{
             return qv;
         }).collect(Collectors.toList());
         return relatedQuestionVO;
+    }
+
+    @Override
+    public Integer updateLikeCountFromRedis() {
+        Integer counter = 0;
+        Map<Object, Object> map = redisTemplate.opsForHash().entries("REDIS_MAP_LIKE_COUNT");
+        for (Object key : map.keySet()) {
+            Integer keyInteger = Integer.valueOf((String) key);
+            Question question = questionMapper.selectQuestionById(keyInteger);
+            Integer likeCount = (Integer)map.get(key);
+            question.setLikeCount(likeCount);
+            question.setGmtModified(System.currentTimeMillis());
+            counter += questionMapper.updateLikeCount(question);
+        }
+        return counter;
     }
 }

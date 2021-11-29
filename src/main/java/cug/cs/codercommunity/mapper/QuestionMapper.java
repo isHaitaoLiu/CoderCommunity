@@ -2,7 +2,6 @@ package cug.cs.codercommunity.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import cug.cs.codercommunity.model.Question;
-import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
@@ -39,4 +38,7 @@ public interface QuestionMapper extends BaseMapper<Question>{
     void incCommentCount(Question question);
 
     List<Question> selectRelated(Question question);
+
+    @Update("update question set like_count = #{likeCount} where id = #{id}")
+    Integer updateLikeCount(Question question);
 }

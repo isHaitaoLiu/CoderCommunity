@@ -20,7 +20,8 @@ public class PublishController {
     public String edit(@PathVariable(name = "id") Integer id,
                        Model model,
                        HttpSession session){
-        QuestionVO questionVO = questionService.getQuestionById(id);
+        User user = (User) session.getAttribute("user");
+        QuestionVO questionVO = questionService.getQuestionById(id, user);
         model.addAttribute("title", questionVO.getTitle());
         model.addAttribute("description", questionVO.getDescription());
         model.addAttribute("tag", questionVO.getTag());

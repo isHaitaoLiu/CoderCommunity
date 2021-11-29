@@ -27,10 +27,10 @@ function comment2target(targetId, type, content) {
             "type": type
         }),
         success: function (response) {
-            if (response.code == 200) {
+            if (response.code === 200) {
                 window.location.reload();
             } else {
-                if (response.code == 2003) {
+                if (response.code === 2003) {
                     var isAccepted = confirm(response.message);
                     if (isAccepted) {
                         window.open("https://github.com/login/oauth/authorize?client_id=2859958f9f059979ed3a&redirect_uri=" + document.location.origin + "/callback&scope=user&state=1");
@@ -67,7 +67,7 @@ function collapseComments(e) {
         e.classList.remove("active");
     } else {
         var subCommentContainer = $("#comment-" + id);
-        if (subCommentContainer.children().length != 1) {
+        if (subCommentContainer.children().length !== 1) {
             //展开二级评论
             comments.addClass("in");
             // 标记二级评论展开状态
@@ -116,3 +116,51 @@ function collapseComments(e) {
         }
     }
 }
+
+/**
+ * 点赞处理
+ */
+function like(e) {
+    var questionId = e.getAttribute('question-id');
+    var status = e.getAttribute('status');
+
+    $.ajax({
+        type: "POST",
+        url: "/like",
+        contentType: 'application/json',
+        data: JSON.stringify({
+            "status": status,
+            "questionId": questionId,
+        }),
+        success: function (response) {
+            if (response.code === 200) {
+                if (response.data === true){  //点赞或取消点赞操作成功
+                    if (status === "1"){
+                        status = "0";
+                        e.setAttribute("status", "0");
+                        $("#question-thumbs-up").css(
+                            {
+                                color: "black"
+                            }
+                        )
+                        alert("消赞成功！");
+                    } else{
+                        status = "1";
+                        e.setAttribute("status", "1");
+                        $("#question-thumbs-up").css(
+                            {
+                                color: "blue"
+                            }
+                        )
+                        alert("点赞成功！");
+                    }
+                }
+            } else {
+                alert("服务器异常！")
+            }
+        },
+        dataType: "json"
+    });
+
+}
+

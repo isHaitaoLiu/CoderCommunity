@@ -1,0 +1,1 @@
+alter table `like` add unique key (`user_id`, `question_id`);

@@ -4,6 +4,7 @@ import cug.cs.codercommunity.dto.PageDto;
 import cug.cs.codercommunity.model.Question;
 import cug.cs.codercommunity.model.User;
 import cug.cs.codercommunity.vo.QuestionVO;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.List;
 
@@ -14,11 +15,15 @@ public interface QuestionService {
 
     PageDto<QuestionVO> getOnePage(Integer page, Integer size, User user);
 
-    QuestionVO getQuestionById(Integer id);
+    QuestionVO getQuestionById(Integer id, User user);
 
     void updateQuestion(String title, String description, String tag, User user, Integer questionId);
 
     void incView(Integer id);
 
     List<QuestionVO> getRelatedQuestions(QuestionVO questionVO);
+
+    QuestionVO Question2QuestionVO(Question question, User creator, User user, RedisTemplate<String, Object> redisTemplate);
+
+    Integer updateLikeCountFromRedis();
 }

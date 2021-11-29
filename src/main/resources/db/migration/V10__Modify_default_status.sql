@@ -1,0 +1,1 @@
+alter table `like` modify `status` tinyint(1) default '0' comment '点赞状态，0取消，1点赞'

@@ -19,5 +19,6 @@ public class QuestionVO {
     private Integer viewCount;
     private Integer likeCount;
     private String tag;
+    private Integer likeStatus;
     private User user;
 }
