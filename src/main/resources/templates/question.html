@@ -29,7 +29,7 @@
                     作者：<span th:text="${question.user.name}"></span> |
                     发布时间：<span th:text="${#dates.format(question.gmtCreate, 'yyyy-MM-dd HH:mm')}"></span> |
                     浏览数：<span th:text="${question.viewCount} ? ${question.viewCount} : 0"></span> |
-                    点赞数：<span th:text="${question.likeCount} ? ${question.likeCount} : 0"></span>
+                    点赞数：<span id="like-count-span" th:text="${question.likeCount} ? ${question.likeCount} : 0"></span>
                 </span>
                 <hr class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 

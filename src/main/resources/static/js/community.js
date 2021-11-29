@@ -133,25 +133,34 @@ function like(e) {
             "questionId": questionId,
         }),
         success: function (response) {
+            let thumbsUpFlag = $("#question-thumbs-up"); //获取点赞图标
+            let likeCountSpan = $("#like-count-span");
+
             if (response.code === 200) {
                 if (response.data === true){  //点赞或取消点赞操作成功
-                    if (status === "1"){
+                    if (status !== "0"){   //消赞
                         status = "0";
                         e.setAttribute("status", "0");
-                        $("#question-thumbs-up").css(
+                        thumbsUpFlag.css(
                             {
                                 color: "black"
                             }
                         )
+                        let count = parseInt(likeCountSpan.text());
+                        count--;
+                        likeCountSpan.text(count);
                         alert("消赞成功！");
                     } else{
                         status = "1";
                         e.setAttribute("status", "1");
-                        $("#question-thumbs-up").css(
+                        thumbsUpFlag.css(
                             {
                                 color: "blue"
                             }
                         )
+                        let count = parseInt(likeCountSpan.text());
+                        count++;
+                        likeCountSpan.text(count);
                         alert("点赞成功！");
                     }
                 }

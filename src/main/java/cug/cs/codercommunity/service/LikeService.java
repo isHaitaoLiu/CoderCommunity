@@ -8,10 +8,6 @@ package cug.cs.codercommunity.service;
  **/
 
 public interface LikeService {
-    boolean addLike(Integer userId, Integer questionId);
-
-    boolean removeLike(Integer userId, Integer questionId);
-
     boolean handleLike(Integer userId, Integer questionId, Integer status);
 
     Integer updateLikeFromRedis();

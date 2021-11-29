@@ -1,18 +1,23 @@
 package cug.cs.codercommunity.service;
 
 import cug.cs.codercommunity.dto.PageDto;
+import cug.cs.codercommunity.enums.LikeStatusEnum;
 import cug.cs.codercommunity.exception.CustomException;
 import cug.cs.codercommunity.exception.CustomStatus;
+import cug.cs.codercommunity.mapper.LikeMapper;
 import cug.cs.codercommunity.mapper.QuestionMapper;
 import cug.cs.codercommunity.mapper.UserMapper;
+import cug.cs.codercommunity.model.Like;
 import cug.cs.codercommunity.model.Question;
 import cug.cs.codercommunity.model.User;
 import cug.cs.codercommunity.vo.QuestionVO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-
+@Slf4j
 @Service
 public class QuestionServiceImpl implements QuestionService{
     @Autowired
@@ -29,6 +34,8 @@ public class QuestionServiceImpl implements QuestionService{
     private UserMapper userMapper;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private LikeMapper likeMapper;
 
 
     /*
@@ -161,15 +168,29 @@ public class QuestionServiceImpl implements QuestionService{
         QuestionVO questionVO = new QuestionVO();
         BeanUtils.copyProperties(question, questionVO);
         questionVO.setUser(creator);
-        //设置点赞状态
+        //接下来设置点赞状态
+        //先查询数据库
+        Like like = null;
+        if (user != null){
+            like = likeMapper.selectByUserIdAndQuestionId(user.getId(), question.getId());
+        }
+        if (like == null){
+            questionVO.setLikeStatus(LikeStatusEnum.UNLIKE.getStatus());
+        }else {
+            questionVO.setLikeStatus(like.getStatus());
+        }
+        //再查询缓存，有可能在缓存中更新过
         Object likeObj = null;
         if (user != null){
             likeObj = redisTemplate.opsForHash().get("REDIS_MAP_LIKE", user.getId() + ":" + question.getId());
         }
-        if (likeObj == null){
-            questionVO.setLikeStatus(0);
-        }else {
-            questionVO.setLikeStatus((Integer)likeObj);
+        if (likeObj != null) {
+            questionVO.setLikeStatus((Integer) likeObj);
+        }
+        //接下来设置点赞数,点赞数有可能被更新过
+        Object likeCount = redisTemplate.opsForHash().get("REDIS_MAP_LIKE_COUNT", String.valueOf(question.getId()));
+        if (likeCount != null){
+            questionVO.setLikeCount(questionVO.getLikeCount() + (Integer) likeCount);
         }
         return questionVO;
     }
@@ -224,6 +245,7 @@ public class QuestionServiceImpl implements QuestionService{
     }
 
     @Override
+    @Transactional
     public Integer updateLikeCountFromRedis() {
         Integer counter = 0;
         Map<Object, Object> map = redisTemplate.opsForHash().entries("REDIS_MAP_LIKE_COUNT");
@@ -234,6 +256,7 @@ public class QuestionServiceImpl implements QuestionService{
             question.setLikeCount(likeCount);
             question.setGmtModified(System.currentTimeMillis());
             counter += questionMapper.updateLikeCount(question);
+            redisTemplate.opsForHash().delete("REDIS_MAP_LIKE_COUNT", key);
         }
         return counter;
     }

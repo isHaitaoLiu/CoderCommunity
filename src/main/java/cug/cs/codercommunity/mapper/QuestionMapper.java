@@ -39,6 +39,6 @@ public interface QuestionMapper extends BaseMapper<Question>{
 
     List<Question> selectRelated(Question question);
 
-    @Update("update question set like_count = #{likeCount} where id = #{id}")
+    @Update("update question set like_count = like_count + #{likeCount} where id = #{id}")
     Integer updateLikeCount(Question question);
 }
