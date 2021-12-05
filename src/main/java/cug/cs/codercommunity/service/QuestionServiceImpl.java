@@ -169,28 +169,38 @@ public class QuestionServiceImpl implements QuestionService{
         BeanUtils.copyProperties(question, questionVO);
         questionVO.setUser(creator);
         //接下来设置点赞状态
-        //先查询数据库
-        Like like = null;
+        Object likeObj;
         if (user != null){
-            like = likeMapper.selectByUserIdAndQuestionId(user.getId(), question.getId());
-        }
-        if (like == null){
-            questionVO.setLikeStatus(LikeStatusEnum.UNLIKE.getStatus());
-        }else {
-            questionVO.setLikeStatus(like.getStatus());
-        }
-        //再查询缓存，有可能在缓存中更新过
-        Object likeObj = null;
-        if (user != null){
+            //先查询缓存，有可能在缓存中更新过
             likeObj = redisTemplate.opsForHash().get("REDIS_MAP_LIKE", user.getId() + ":" + question.getId());
+            if (likeObj != null) {
+                //缓存存在，直接设置
+                questionVO.setLikeStatus((Integer) likeObj);
+            }else {
+                //缓存不存在，查询数据库
+                Like like;
+                like = likeMapper.selectByUserIdAndQuestionId(user.getId(), question.getId());
+                if (like != null){
+                    //数据库存在，设置状态
+                    questionVO.setLikeStatus(like.getStatus());
+                }else {
+                    //数据库不存在，设置不喜欢状态
+                    questionVO.setLikeStatus(LikeStatusEnum.UNLIKE.getStatus());
+                }
+            }
+        }else {
+            //用户未登录，设置不喜欢状态
+            questionVO.setLikeStatus(LikeStatusEnum.UNLIKE.getStatus());
         }
-        if (likeObj != null) {
-            questionVO.setLikeStatus((Integer) likeObj);
-        }
-        //接下来设置点赞数,点赞数有可能被更新过
+
+        //接下来获取点赞数, 点赞数有可能被更新过
         Object likeCount = redisTemplate.opsForHash().get("REDIS_MAP_LIKE_COUNT", String.valueOf(question.getId()));
-        if (likeCount != null){
-            questionVO.setLikeCount(questionVO.getLikeCount() + (Integer) likeCount);
+        if (likeCount == null){
+            //将点赞信息存储在redis中
+            redisTemplate.opsForHash().put("REDIS_MAP_LIKE_COUNT", String.valueOf(question.getId()), question.getLikeCount());
+        }else {
+            //设置最新的点赞数
+            questionVO.setLikeCount((Integer) likeCount);
         }
         return questionVO;
     }
