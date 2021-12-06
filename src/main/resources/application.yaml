@@ -15,7 +15,7 @@ spring:
     port: 6379
     database: 1
     connect-timeout: 10000ms
-    password: 9736sider
+    password: ?????????
 
 github:
   client:
