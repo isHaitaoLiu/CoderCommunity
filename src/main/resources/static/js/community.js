@@ -118,7 +118,7 @@ function collapseComments(e) {
 }
 
 /**
- * 点赞处理
+ * 问题点赞处理
  */
 function like(e) {
     var questionId = e.getAttribute('question-id');
@@ -126,7 +126,7 @@ function like(e) {
 
     $.ajax({
         type: "POST",
-        url: "/like",
+        url: "/like/question",
         contentType: 'application/json',
         data: JSON.stringify({
             "status": status,
@@ -173,3 +173,51 @@ function like(e) {
 
 }
 
+/**
+ * 评论点赞处理
+ */
+function commentLike(e) {
+    let commentId = e.getAttribute('comment-id');
+    let status = e.getAttribute('status');
+
+    $.ajax({
+        type: "POST",
+        url: "/like/comment",
+        contentType: 'application/json',
+        data: JSON.stringify({
+            "status": status,
+            "commentId": commentId,
+        }),
+        success: function (response) {
+            let str = "#comment-thumbs-up-" + commentId;
+            console.log(str);
+            let thumbsUpFlag = $(str); //获取评论的点赞图标
+
+            if (response.code === 200) {
+                if (response.data === true){  //点赞或取消点赞操作成功
+                    if (status !== "0"){   //状态由点赞变为未点赞
+                        e.setAttribute("status", "0");
+                        thumbsUpFlag.css(
+                            {
+                                color: "black"
+                            }
+                        )
+                        alert("消赞成功！");
+                    } else{
+                        e.setAttribute("status", "1");
+                        thumbsUpFlag.css(
+                            {
+                                color: "blue"
+                            }
+                        )
+                        alert("点赞成功！");
+                    }
+                }
+            } else {
+                alert("服务器异常！")
+            }
+        },
+        dataType: "json"
+    });
+
+}

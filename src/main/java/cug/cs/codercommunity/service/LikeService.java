@@ -11,4 +11,8 @@ public interface LikeService {
     boolean handleLike(Integer userId, Integer questionId, Integer status);
 
     Integer updateLikeFromRedis();
+
+    boolean commentLike(Integer userId, Integer commentId, Integer status);
+
+    Integer updateCommentLikeFromRedis();
 }

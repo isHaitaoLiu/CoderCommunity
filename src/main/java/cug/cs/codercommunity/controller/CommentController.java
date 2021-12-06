@@ -50,7 +50,7 @@ public class CommentController {
     @ResponseBody
     @GetMapping("/comment/{id}")
     public JsonResult<List<CommentVO>> getSubComments(@PathVariable(name = "id") Integer id){
-        List<CommentVO> comments = commentService.findAllCommentsByTargetId(id, CommentType.COMMENT);
+        List<CommentVO> comments = commentService.findAllCommentsByTargetId(null, id, CommentType.COMMENT);
         return new JsonResult<>(CustomStatus.SUCCESS, comments);
     }
 }

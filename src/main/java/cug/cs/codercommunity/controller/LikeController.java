@@ -28,8 +28,8 @@ public class LikeController {
     private LikeService likeService;
 
     @ResponseBody
-    @PostMapping("/like")
-    public JsonResult<Object> likeOrUnlike(@RequestBody Map<String, String> map,
+    @PostMapping("/like/question")
+    public JsonResult<Object> questionLike(@RequestBody Map<String, String> map,
                                            HttpSession session){
         User user = (User)session.getAttribute("user");
         if (user == null){
@@ -40,7 +40,22 @@ public class LikeController {
                 Integer.valueOf(map.get("questionId")),
                 Integer.valueOf(map.get("status"))
         );
-        //log.info("点赞原状态：{}，点赞是否成功：{}", map.get("status"), isSuccess);
+        return new JsonResult<>(CustomStatus.SUCCESS, isSuccess);
+    }
+
+    @ResponseBody
+    @PostMapping("/like/comment")
+    public JsonResult<Object> commentLike(@RequestBody Map<String, String> map,
+                                           HttpSession session){
+        User user = (User)session.getAttribute("user");
+        if (user == null){
+            return new JsonResult<>(CustomStatus.NOT_LOGIN);
+        }
+        boolean isSuccess = likeService.commentLike(
+                user.getId(),
+                Integer.valueOf(map.get("commentId")),
+                Integer.valueOf(map.get("status"))
+        );
         return new JsonResult<>(CustomStatus.SUCCESS, isSuccess);
     }
 }

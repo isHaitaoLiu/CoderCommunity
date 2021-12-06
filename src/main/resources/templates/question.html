@@ -53,8 +53,10 @@
                           class="glyphicon glyphicon-thumbs-up icon"
                           th:question-id="${question.id}"
                           th:status="${question.likeStatus}"
+                          th:style="${question.likeStatus} == '1' ? 'color:blue' : 'color:black'"
                           aria-hidden="true"
-                          onclick="like(this)">
+                          onclick="like(this)"
+                          >
                     </span>
                 </div>
                 <!--标签-->
@@ -85,7 +87,12 @@
 
                             </div>
                             <div class="comment-menu">
-                                <span class="glyphicon glyphicon-thumbs-up icon"></span>
+                                <span th:id="'comment-thumbs-up-'+${comment.id}" class="glyphicon glyphicon-thumbs-up icon"
+                                      th:comment-id="${comment.id}"
+                                      th:status="${comment.likeStatus}"
+                                      th:style="${comment.likeStatus} == '1' ? 'color:blue' : 'color:black'"
+                                      onclick="commentLike(this)">
+                                </span>
                                 <span class="glyphicon glyphicon-comment icon" th:data-id="${comment.id}" onclick="collapseComments(this)"></span>
                                 <span class="pull-right" th:text="${#dates.format(comment.gmtCreate, 'yyyy-MM-dd')}"></span>
                             </div>
@@ -155,17 +162,6 @@
         </div>
     </div>
 </div>
-
-<script>
-    $(document).ready(function(){
-        const status = $("#question-thumbs-up").attr("status");
-        if (status === "1"){
-            $("#question-thumbs-up").css({
-                color: "blue"
-            })
-        }
-    })
-</script>
 
 
 </body>

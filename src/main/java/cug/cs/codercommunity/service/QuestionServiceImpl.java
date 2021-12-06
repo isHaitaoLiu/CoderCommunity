@@ -172,7 +172,7 @@ public class QuestionServiceImpl implements QuestionService{
         Object likeObj;
         if (user != null){
             //先查询缓存，有可能在缓存中更新过
-            likeObj = redisTemplate.opsForHash().get("REDIS_MAP_LIKE", user.getId() + ":" + question.getId());
+            likeObj = redisTemplate.opsForHash().get("MAP_QUESTION_LIKE", user.getId() + ":" + question.getId());
             if (likeObj != null) {
                 //缓存存在，直接设置
                 questionVO.setLikeStatus((Integer) likeObj);
@@ -194,10 +194,10 @@ public class QuestionServiceImpl implements QuestionService{
         }
 
         //接下来获取点赞数, 点赞数有可能被更新过
-        Object likeCount = redisTemplate.opsForHash().get("REDIS_MAP_LIKE_COUNT", String.valueOf(question.getId()));
+        Object likeCount = redisTemplate.opsForHash().get("MAP_QUESTION_LIKE_COUNT", String.valueOf(question.getId()));
         if (likeCount == null){
             //将点赞信息存储在redis中
-            redisTemplate.opsForHash().put("REDIS_MAP_LIKE_COUNT", String.valueOf(question.getId()), question.getLikeCount());
+            redisTemplate.opsForHash().put("MAP_QUESTION_LIKE_COUNT", String.valueOf(question.getId()), question.getLikeCount());
         }else {
             //设置最新的点赞数
             questionVO.setLikeCount((Integer) likeCount);
@@ -258,7 +258,7 @@ public class QuestionServiceImpl implements QuestionService{
     @Transactional
     public Integer updateLikeCountFromRedis() {
         Integer counter = 0;
-        Map<Object, Object> map = redisTemplate.opsForHash().entries("REDIS_MAP_LIKE_COUNT");
+        Map<Object, Object> map = redisTemplate.opsForHash().entries("MAP_QUESTION_LIKE_COUNT");
         for (Object key : map.keySet()) {
             Integer keyInteger = Integer.valueOf((String) key);
             Question question = questionMapper.selectQuestionById(keyInteger);
@@ -266,7 +266,7 @@ public class QuestionServiceImpl implements QuestionService{
             question.setLikeCount(likeCount);
             question.setGmtModified(System.currentTimeMillis());
             counter += questionMapper.updateLikeCount(question);
-            redisTemplate.opsForHash().delete("REDIS_MAP_LIKE_COUNT", key);
+            redisTemplate.opsForHash().delete("MAP_QUESTION_LIKE_COUNT", key);
         }
         return counter;
     }

@@ -3,25 +3,24 @@ package cug.cs.codercommunity.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import cug.cs.codercommunity.enums.CommentType;
+import cug.cs.codercommunity.enums.LikeStatusEnum;
 import cug.cs.codercommunity.enums.NotificationStatusEnum;
 import cug.cs.codercommunity.enums.NotificationTypeEnum;
 import cug.cs.codercommunity.exception.CustomExceptionToJson;
 import cug.cs.codercommunity.exception.CustomStatus;
-import cug.cs.codercommunity.mapper.CommentMapper;
-import cug.cs.codercommunity.mapper.NotificationMapper;
-import cug.cs.codercommunity.mapper.QuestionMapper;
-import cug.cs.codercommunity.mapper.UserMapper;
-import cug.cs.codercommunity.model.Comment;
-import cug.cs.codercommunity.model.Notification;
-import cug.cs.codercommunity.model.Question;
-import cug.cs.codercommunity.model.User;
+import cug.cs.codercommunity.mapper.*;
+import cug.cs.codercommunity.model.*;
 import cug.cs.codercommunity.vo.CommentVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,6 +33,10 @@ public class CommentServiceImpl implements CommentService{
     private UserMapper userMapper;
     @Autowired
     private NotificationMapper notificationMapper;
+    @Autowired
+    private CommentLikeMapper commentLikeMapper;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Transactional
     @Override
@@ -95,7 +98,7 @@ public class CommentServiceImpl implements CommentService{
     }
 
     @Override
-    public List<CommentVO> findAllCommentsByTargetId(Integer id, CommentType commentType) {
+    public List<CommentVO> findAllCommentsByTargetId(User user, Integer id, CommentType commentType) {
         //查找该问题下的所有评论
         QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<>();
         commentQueryWrapper
@@ -115,16 +118,64 @@ public class CommentServiceImpl implements CommentService{
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
         userQueryWrapper.in("id", userIds);
         List<User> users = userMapper.selectList(userQueryWrapper);
-        Map<Integer, User> userMap = users.stream().collect(Collectors.toMap(User::getId, user -> user));
+        Map<Integer, User> userMap = users.stream().collect(Collectors.toMap(User::getId, u -> u));
 
         //获取评论，用户绑定的对象列表
         List<CommentVO> commentVOList = comments.stream().map(comment -> {
             CommentVO commentVO = new CommentVO();
             BeanUtils.copyProperties(comment, commentVO);
             commentVO.setUser(userMap.get(comment.getCommentator()));
+
+            //缓存处理开始
+
+            //查询当前用户是否点赞
+            if (user == null){
+                //如果用户不存在，直接设置未点赞
+                commentVO.setLikeStatus(LikeStatusEnum.UNLIKE.getStatus());
+            }else {
+                //当前用户已经登录，查找redis，是否更新过
+                Object redisLike = redisTemplate.opsForHash().get("MAP_COMMENT_LIKE", user.getId() + ":" + commentVO.getId());
+                if (redisLike != null){
+                    //设置为缓存中的状态
+                    commentVO.setLikeStatus((Integer)redisLike);
+                }else {
+                    //查询数据库，设置
+                    CommentLike dbLike = commentLikeMapper.selectByUserIdAndCommentId(user.getId(), commentVO.getId());
+                    if (dbLike != null){
+                        commentVO.setLikeStatus(dbLike.getStatus());
+                    }else {
+                        commentVO.setLikeStatus(LikeStatusEnum.UNLIKE.getStatus());
+                    }
+                }
+            }
+            //设置redis总数
+            Object redis_count = redisTemplate.opsForHash().get("MAP_COMMENT_LIKE_COUNT", String.valueOf(commentVO.getId()));
+            if (redis_count == null){
+                redisTemplate.opsForHash().put("MAP_COMMENT_LIKE_COUNT", String.valueOf(commentVO.getId()), commentVO.getLikeCount());
+            }else {
+                commentVO.setLikeCount((Integer)redis_count);
+            }
+
+
             return commentVO;
         }).collect(Collectors.toList());
 
         return commentVOList;
+    }
+
+    @Override
+    public Integer updateCommentLikeCountFromRedis(){
+        Integer counter = 0;
+        Map<Object, Object> map = redisTemplate.opsForHash().entries("MAP_COMMENT_LIKE_COUNT");
+        for (Object key : map.keySet()) {
+            Integer keyInteger = Integer.valueOf((String) key);
+            Comment comment = commentMapper.selectById(keyInteger);
+            Integer likeCount = (Integer)map.get(key);
+            comment.setLikeCount(likeCount);
+            comment.setGmtModified(System.currentTimeMillis());
+            counter += commentMapper.updateById(comment);
+            redisTemplate.opsForHash().delete("MAP_COMMENT_LIKE_COUNT", key);
+        }
+        return counter;
     }
 }

@@ -32,7 +32,7 @@ public class QuestionController {
         User user = (User) session.getAttribute("user");
         QuestionVO questionVO = questionService.getQuestionById(id, user);
         List<QuestionVO> relatedQuestions = questionService.getRelatedQuestions(questionVO);
-        List<CommentVO> commentVOList = commentService.findAllCommentsByTargetId(id, CommentType.QUESTION);
+        List<CommentVO> commentVOList = commentService.findAllCommentsByTargetId(user, id, CommentType.QUESTION);
 
         model.addAttribute("question", questionVO);
         //log.info("问题{}的点赞状态是：{}", questionVO.getId(), questionVO.getLikeStatus());

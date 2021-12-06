@@ -17,4 +17,6 @@ public class CommentVO {
     private Integer likeCount;
     private String content;
     private User user;
+    //当前用户对该评论的点赞状态
+    private Integer likeStatus;
 }
