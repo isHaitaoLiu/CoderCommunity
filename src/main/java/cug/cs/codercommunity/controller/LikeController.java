@@ -35,7 +35,7 @@ public class LikeController {
         if (user == null){
             return new JsonResult<>(CustomStatus.NOT_LOGIN);
         }
-        boolean isSuccess = likeService.handleLike(
+        boolean isSuccess = likeService.questionLike(
                 user.getId(),
                 Integer.valueOf(map.get("questionId")),
                 Integer.valueOf(map.get("status"))

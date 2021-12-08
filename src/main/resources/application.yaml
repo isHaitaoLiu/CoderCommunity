@@ -15,7 +15,20 @@ spring:
     port: 6379
     database: 1
     connect-timeout: 10000ms
-    password: ?????????
+    password:
+  kafka:
+    bootstrap-servers: 121.196.148.198:9092,121.196.148.198:9093,121.196.148.198:9094
+    producer:
+      client-id: sakura-producer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      client-id: sakura-consumer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: true
+      auto-offset-reset: earliest
+
 
 github:
   client:

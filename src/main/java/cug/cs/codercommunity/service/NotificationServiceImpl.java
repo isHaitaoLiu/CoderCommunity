@@ -80,7 +80,15 @@ public class NotificationServiceImpl implements NotificationService{
         //获取所有通知
         List<Notification> notifications = notificationMapper.selectOnePageByReceiver(user.getId(), offset, size);
         notifications.sort((a, b) -> {
-            return (int) (b.getGmtCreate() - a.getGmtCreate());
+            if (a.getStatus().intValue() == b.getStatus().intValue()){
+                return (int) (b.getGmtCreate() - a.getGmtCreate());
+            }else {
+                if (a.getStatus().equals(NotificationStatusEnum.UNREAD.getStatus())){
+                    return 1;
+                }else {
+                    return -1;
+                }
+            }
         });
         if (notifications.size() == 0){
             return pageDto;

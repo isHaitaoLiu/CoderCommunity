@@ -1,10 +1,13 @@
 package cug.cs.codercommunity.service;
 
+import cug.cs.codercommunity.enums.KafkaNotificationTopicEnum;
 import cug.cs.codercommunity.enums.LikeStatusEnum;
 import cug.cs.codercommunity.mapper.CommentLikeMapper;
+import cug.cs.codercommunity.mapper.CommentMapper;
 import cug.cs.codercommunity.mapper.LikeMapper;
-import cug.cs.codercommunity.model.CommentLike;
-import cug.cs.codercommunity.model.Like;
+import cug.cs.codercommunity.mapper.QuestionMapper;
+import cug.cs.codercommunity.message.notification.NotificationMessageProducer;
+import cug.cs.codercommunity.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -30,6 +33,12 @@ public class LikeServiceImpl implements LikeService{
     private LikeMapper likeMapper;
     @Autowired
     private CommentLikeMapper commentLikeMapper;
+    @Autowired
+    private QuestionMapper questionMapper;
+    @Autowired
+    private CommentMapper commentMapper;
+    @Autowired
+    private NotificationMessageProducer notificationMessageProducer;
 
 
     /*
@@ -40,11 +49,20 @@ public class LikeServiceImpl implements LikeService{
      * @return boolean
      **/
     @Override
-    public boolean handleLike(Integer userId, Integer questionId, Integer status) {
+    public boolean questionLike(Integer userId, Integer questionId, Integer status) {
         String key = userId + ":" + questionId;
         if (status.equals(LikeStatusEnum.UNLIKE.getStatus())){
+            //当前状态为未点赞，则进行点赞
             redisTemplate.opsForHash().put("MAP_QUESTION_LIKE", key, LikeStatusEnum.LIKE.getStatus());
             redisTemplate.opsForHash().increment("MAP_QUESTION_LIKE_COUNT", String.valueOf(questionId), 1L);
+            //发送kafka消息
+            NotificationMessage notificationMessage = new NotificationMessage();
+            notificationMessage.setTopic(KafkaNotificationTopicEnum.TOPIC_LIKE_QUESTION.getTopic());
+            notificationMessage.setNotifier(userId);
+            Question question = questionMapper.selectQuestionById(questionId);
+            notificationMessage.setReceiver(question.getCreator());
+            notificationMessage.setOuterId(questionId);
+            notificationMessageProducer.sendMessage(notificationMessage);
         }else {
             redisTemplate.opsForHash().put("MAP_QUESTION_LIKE", key, LikeStatusEnum.UNLIKE.getStatus());
             redisTemplate.opsForHash().increment("MAP_QUESTION_LIKE_COUNT", String.valueOf(questionId), -1L);
@@ -56,8 +74,18 @@ public class LikeServiceImpl implements LikeService{
     public boolean commentLike(Integer userId, Integer commentId, Integer status) {
         String key = userId + ":" + commentId;
         if (status.equals(LikeStatusEnum.UNLIKE.getStatus())){
+            //当前状态为未点赞，则进行点赞
             redisTemplate.opsForHash().put("MAP_COMMENT_LIKE", key, LikeStatusEnum.LIKE.getStatus());
             redisTemplate.opsForHash().increment("MAP_COMMENT_LIKE_COUNT", String.valueOf(commentId), 1L);
+            //发送kafka消息
+            NotificationMessage notificationMessage = new NotificationMessage();
+            notificationMessage.setTopic(KafkaNotificationTopicEnum.TOPIC_LIKE_COMMENT.getTopic());
+            notificationMessage.setNotifier(userId);
+            Comment comment = commentMapper.selectById(commentId);
+            notificationMessage.setReceiver(comment.getCommentator());
+            Question question = questionMapper.selectQuestionById(comment.getParentId());
+            notificationMessage.setOuterId(question.getId());
+            notificationMessageProducer.sendMessage(notificationMessage);
         }else {
             redisTemplate.opsForHash().put("MAP_COMMENT_LIKE", key, LikeStatusEnum.UNLIKE.getStatus());
             redisTemplate.opsForHash().increment("MAP_COMMENT_LIKE_COUNT", String.valueOf(commentId), -1L);

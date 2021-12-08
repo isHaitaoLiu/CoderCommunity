@@ -2,20 +2,17 @@ package cug.cs.codercommunity.service;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import cug.cs.codercommunity.enums.CommentType;
-import cug.cs.codercommunity.enums.LikeStatusEnum;
-import cug.cs.codercommunity.enums.NotificationStatusEnum;
-import cug.cs.codercommunity.enums.NotificationTypeEnum;
+import cug.cs.codercommunity.enums.*;
 import cug.cs.codercommunity.exception.CustomExceptionToJson;
 import cug.cs.codercommunity.exception.CustomStatus;
 import cug.cs.codercommunity.mapper.*;
+import cug.cs.codercommunity.message.notification.NotificationMessageProducer;
 import cug.cs.codercommunity.model.*;
 import cug.cs.codercommunity.vo.CommentVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +33,10 @@ public class CommentServiceImpl implements CommentService{
     @Autowired
     private CommentLikeMapper commentLikeMapper;
     @Autowired
+    private NotificationMessageProducer notificationMessageProducer;
+    @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    @Transactional
     @Override
     public void addComment(Comment comment) {
         if (comment.getParentId() == null){
@@ -58,11 +56,13 @@ public class CommentServiceImpl implements CommentService{
 
         if (c == CommentType.COMMENT){
             //回复评论
+
+            //数据库查询回复的是哪条评论
             Comment dbComment = commentMapper.selectById(comment.getParentId());
             if (dbComment == null){
                 throw new CustomExceptionToJson(CustomStatus.COMMENT_NOT_FOUND);
             }
-            //查询问题，以便放入通知中
+            //查询这条评论属于哪个问题
             Question question = questionMapper.selectQuestionById(dbComment.getParentId());
             if (question == null){
                 throw new CustomExceptionToJson(CustomStatus.QUESTION_NOT_FOUND);
@@ -71,7 +71,14 @@ public class CommentServiceImpl implements CommentService{
             commentMapper.insert(comment);
 
             //进行通知
-            createNotification(comment, dbComment.getCommentator(), NotificationTypeEnum.REPLY_COMMENT, question);
+            //createNotification(comment, dbComment.getCommentator(), NotificationTypeEnum.REPLY_COMMENT, question);
+            //发送消息到kafka
+            NotificationMessage notificationMessage = new NotificationMessage();
+            notificationMessage.setNotifier(comment.getCommentator());
+            notificationMessage.setReceiver(dbComment.getCommentator());
+            notificationMessage.setOuterId(question.getId());
+            notificationMessage.setTopic(KafkaNotificationTopicEnum.TOPIC_REPLY_COMMENT.getTopic());
+            notificationMessageProducer.sendMessage(notificationMessage);
         }else {
             //回复问题
             Question question = questionMapper.selectQuestionById(comment.getParentId());
@@ -80,8 +87,14 @@ public class CommentServiceImpl implements CommentService{
             }
             commentMapper.insert(comment);
             questionMapper.incCommentCount(question);
-            //进行通知
-            createNotification(comment, question.getCreator(), NotificationTypeEnum.REPLY_QUESTION, question);
+            //发送消息到kafka
+            NotificationMessage notificationMessage = new NotificationMessage();
+            notificationMessage.setNotifier(comment.getCommentator());
+            notificationMessage.setReceiver(question.getCreator());
+            notificationMessage.setOuterId(question.getId());
+            notificationMessage.setTopic(KafkaNotificationTopicEnum.TOPIC_REPLY_QUESTION.getTopic());
+            notificationMessageProducer.sendMessage(notificationMessage);
+            //createNotification(comment, question.getCreator(), NotificationTypeEnum.REPLY_QUESTION, question);
         }
     }
 

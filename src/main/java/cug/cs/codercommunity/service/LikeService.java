@@ -8,7 +8,7 @@ package cug.cs.codercommunity.service;
  **/
 
 public interface LikeService {
-    boolean handleLike(Integer userId, Integer questionId, Integer status);
+    boolean questionLike(Integer userId, Integer questionId, Integer status);
 
     Integer updateLikeFromRedis();
 
