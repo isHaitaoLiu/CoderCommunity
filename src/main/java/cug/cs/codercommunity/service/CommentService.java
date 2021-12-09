@@ -19,4 +19,7 @@ public interface CommentService {
 
     Integer updateCommentLikeCountFromRedis();
 
+    boolean commentLike(Integer userId, Integer commentId, Integer status);
+
+    Integer updateCommentLikeFromRedis();
 }

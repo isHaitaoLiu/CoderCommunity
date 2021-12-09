@@ -1,15 +1,15 @@
 package cug.cs.codercommunity.service;
 
 import cug.cs.codercommunity.dto.PageDto;
+import cug.cs.codercommunity.enums.KafkaNotificationTopicEnum;
 import cug.cs.codercommunity.enums.LikeStatusEnum;
 import cug.cs.codercommunity.exception.CustomException;
 import cug.cs.codercommunity.exception.CustomStatus;
 import cug.cs.codercommunity.mapper.QuestionLikeMapper;
 import cug.cs.codercommunity.mapper.QuestionMapper;
 import cug.cs.codercommunity.mapper.UserMapper;
-import cug.cs.codercommunity.model.QuestionLike;
-import cug.cs.codercommunity.model.Question;
-import cug.cs.codercommunity.model.User;
+import cug.cs.codercommunity.message.notification.NotificationMessageProducer;
+import cug.cs.codercommunity.model.*;
 import cug.cs.codercommunity.vo.QuestionVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +33,8 @@ public class QuestionServiceImpl implements QuestionService{
     private RedisTemplate<String, Object> redisTemplate;
     @Autowired
     private QuestionLikeMapper questionLikeMapper;
+    @Autowired
+    private NotificationMessageProducer notificationMessageProducer;
 
 
     /*
@@ -264,6 +266,57 @@ public class QuestionServiceImpl implements QuestionService{
             question.setGmtModified(new Date());
             counter += questionMapper.updateLikeCount(question);
             redisTemplate.opsForHash().delete("MAP_QUESTION_LIKE_COUNT", key);
+        }
+        return counter;
+    }
+
+
+    /*
+     * @Author sakura
+     * @Description 点赞接口处理方法，检查传入的类型，如果是0，则进行点赞；如果是1，取消赞
+     * @Date 2021/11/28
+     * @Param [userId, questionId, type]
+     * @return boolean
+     **/
+    @Override
+    public boolean questionLike(Integer userId, Integer questionId, Integer status) {
+        String key = userId + ":" + questionId;
+        if (status.equals(LikeStatusEnum.UNLIKE.getStatus())){
+            //当前状态为未点赞，则进行点赞
+            redisTemplate.opsForHash().put("MAP_QUESTION_LIKE", key, LikeStatusEnum.LIKE.getStatus());
+            redisTemplate.opsForHash().increment("MAP_QUESTION_LIKE_COUNT", String.valueOf(questionId), 1L);
+            //发送kafka消息
+            NotificationMessage notificationMessage = new NotificationMessage();
+            notificationMessage.setTopic(KafkaNotificationTopicEnum.TOPIC_LIKE_QUESTION.getTopic());
+            notificationMessage.setNotifier(userId);
+            Question question = questionMapper.selectQuestionById(questionId);
+            notificationMessage.setReceiver(question.getCreator());
+            notificationMessage.setOuterId(questionId);
+            notificationMessageProducer.sendMessage(notificationMessage);
+        }else {
+            redisTemplate.opsForHash().put("MAP_QUESTION_LIKE", key, LikeStatusEnum.UNLIKE.getStatus());
+            redisTemplate.opsForHash().increment("MAP_QUESTION_LIKE_COUNT", String.valueOf(questionId), -1L);
+        }
+        return true;
+    }
+
+
+    @Override
+    @Transactional
+    public Integer updateQuestionLikeFromRedis() {
+        QuestionLike questionLike = new QuestionLike();
+        Integer counter = 0;
+        Map<Object, Object> map = redisTemplate.opsForHash().entries("MAP_QUESTION_LIKE");
+        for (Object key : map.keySet()) {
+            String keyStr = (String) key;
+            String[] strings = keyStr.split(":");
+            questionLike.setUserId(Integer.valueOf(strings[0]));
+            questionLike.setQuestionId(Integer.valueOf(strings[1]));
+            questionLike.setStatus((int)map.get(key));
+            questionLike.setGmtCreate(new Date());
+            questionLike.setGmtModified(new Date());
+            counter += questionLikeMapper.insertOrUpdateLike(questionLike);
+            redisTemplate.opsForHash().delete("MAP_QUESTION_LIKE", key);
         }
         return counter;
     }

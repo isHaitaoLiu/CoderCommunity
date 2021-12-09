@@ -26,4 +26,8 @@ public interface QuestionService {
     QuestionVO Question2QuestionVO(Question question, User creator, User user, RedisTemplate<String, Object> redisTemplate);
 
     Integer updateLikeCountFromRedis();
+
+    boolean questionLike(Integer userId, Integer questionId, Integer status);
+
+    Integer updateQuestionLikeFromRedis();
 }

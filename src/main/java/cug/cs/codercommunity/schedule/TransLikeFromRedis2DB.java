@@ -1,7 +1,6 @@
 package cug.cs.codercommunity.schedule;
 
 import cug.cs.codercommunity.service.CommentService;
-import cug.cs.codercommunity.service.QuestionLikeService;
 import cug.cs.codercommunity.service.QuestionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +21,6 @@ import java.util.Date;
 @Component
 public class TransLikeFromRedis2DB {
     @Autowired
-    private QuestionLikeService questionLikeService;
-    @Autowired
     private QuestionService questionService;
     @Autowired
     private CommentService commentService;
@@ -31,9 +28,9 @@ public class TransLikeFromRedis2DB {
     @Scheduled(fixedRate = 1000 * 60 * 30)
     void transLikeFromRedis2DB(){
         log.info("======= 点赞数据持久化定时任务开始，时间：{} ======", new Date());
-        Integer row1 = questionLikeService.updateLikeFromRedis();
+        Integer row1 = questionService.updateQuestionLikeFromRedis();
         Integer row2 = questionService.updateLikeCountFromRedis();
-        Integer row3 = questionLikeService.updateCommentLikeFromRedis();
+        Integer row3 = commentService.updateCommentLikeFromRedis();
         Integer row4 = commentService.updateCommentLikeCountFromRedis();
         log.info("======= 点赞数据持久化定时任务处理问题点赞详情数{}, 处理问题点赞数{}，处理评论点赞详情数{}, 处理评论点赞数{} ======", row1, row2, row3, row4);
         log.info("======= 点赞数据持久化定时任务结束，时间：{} ======", new Date());

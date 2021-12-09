@@ -94,8 +94,8 @@ function collapseComments(e) {
                         "class": "menu"
                     }).append($("<span/>", {
                         "class": "pull-right",
-                        //"html": moment(comment.gmtCreate).format('YYYY-MM-DD')
-                        "html": comment.gmtCreate.toString()
+                        "html": moment(comment.gmtCreate).format('YYYY-MM-DD')
+                        //"html": comment.gmtCreate.toString()
                     })));
 
                     var mediaElement = $("<div/>", {
@@ -121,13 +121,13 @@ function collapseComments(e) {
 /**
  * 问题点赞处理
  */
-function like(e) {
+function questionLike(e) {
     var questionId = e.getAttribute('question-id');
     var status = e.getAttribute('status');
 
     $.ajax({
         type: "POST",
-        url: "/like/question",
+        url: "/question/like",
         contentType: 'application/json',
         data: JSON.stringify({
             "status": status,
@@ -183,7 +183,7 @@ function commentLike(e) {
 
     $.ajax({
         type: "POST",
-        url: "/like/comment",
+        url: "/comment/like",
         contentType: 'application/json',
         data: JSON.stringify({
             "status": status,

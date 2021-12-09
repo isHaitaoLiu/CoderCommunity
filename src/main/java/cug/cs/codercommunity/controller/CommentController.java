@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpSession;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class CommentController {
@@ -53,5 +54,21 @@ public class CommentController {
     public JsonResult<List<CommentVO>> getSubComments(@PathVariable(name = "id") Integer id){
         List<CommentVO> comments = commentService.findAllCommentsByTargetId(null, id, CommentType.COMMENT);
         return new JsonResult<>(CustomStatus.SUCCESS, comments);
+    }
+
+    @ResponseBody
+    @PostMapping("/comment/like")
+    public JsonResult<Object> commentLike(@RequestBody Map<String, String> map,
+                                          HttpSession session){
+        User user = (User)session.getAttribute("user");
+        if (user == null){
+            return new JsonResult<>(CustomStatus.NOT_LOGIN);
+        }
+        boolean isSuccess = commentService.commentLike(
+                user.getId(),
+                Integer.valueOf(map.get("commentId")),
+                Integer.valueOf(map.get("status"))
+        );
+        return new JsonResult<>(CustomStatus.SUCCESS, isSuccess);
     }
 }
