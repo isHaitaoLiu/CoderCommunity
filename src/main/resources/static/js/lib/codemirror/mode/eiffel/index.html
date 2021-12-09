@@ -59,11 +59,11 @@ feature -- Access
             generator_not_empty: not Result.is_empty
         end
 
-    generating_type: TYPE [detachable like Current]
+    generating_type: TYPE [detachable questionLike Current]
             -- Type of current object
             -- (type of which it is a direct instance)
         do
-            Result := {detachable like Current}
+            Result := {detachable questionLike Current}
         ensure
             generating_type_not_void: Result /= Void
         end
@@ -92,7 +92,7 @@ feature -- Status report
 
 feature -- Comparison
 
-    is_equal (other: like Current): BOOLEAN
+    is_equal (other: questionLike Current): BOOLEAN
             -- Is `other' attached to an object considered
             -- equal to current object?
         require
@@ -104,7 +104,7 @@ feature -- Comparison
             consistent: standard_is_equal (other) implies Result
         end
 
-    frozen standard_is_equal (other: like Current): BOOLEAN
+    frozen standard_is_equal (other: questionLike Current): BOOLEAN
             -- Is `other' attached to an object of the same type
             -- as current object, and field-by-field identical to it?
         require
@@ -116,7 +116,7 @@ feature -- Comparison
             symmetric: Result implies other.standard_is_equal (Current)
         end
 
-    frozen equal (a: detachable ANY; b: like a): BOOLEAN
+    frozen equal (a: detachable ANY; b: questionLike a): BOOLEAN
             -- Are `a' and `b' either both void or attached
             -- to objects considered equal?
         do
@@ -132,7 +132,7 @@ feature -- Comparison
                         a.is_equal (b))
         end
 
-    frozen standard_equal (a: detachable ANY; b: like a): BOOLEAN
+    frozen standard_equal (a: detachable ANY; b: questionLike a): BOOLEAN
             -- Are `a' and `b' either both void or attached to
             -- field-by-field identical objects of the same type?
             -- Always uses default object comparison criterion.
@@ -149,7 +149,7 @@ feature -- Comparison
                         a.standard_is_equal (b))
         end
 
-    frozen is_deep_equal (other: like Current): BOOLEAN
+    frozen is_deep_equal (other: questionLike Current): BOOLEAN
             -- Are `Current' and `other' attached to isomorphic object structures?
         require
             other_not_void: other /= Void
@@ -161,7 +161,7 @@ feature -- Comparison
             symmetric: Result implies other.is_deep_equal (Current)
         end
 
-    frozen deep_equal (a: detachable ANY; b: like a): BOOLEAN
+    frozen deep_equal (a: detachable ANY; b: questionLike a): BOOLEAN
             -- Are `a' and `b' either both void
             -- or attached to isomorphic object structures?
         do
@@ -179,7 +179,7 @@ feature -- Comparison
 
 feature -- Duplication
 
-    frozen twin: like Current
+    frozen twin: questionLike Current
             -- New object equal to `Current'
             -- `twin' calls `copy'; to change copying/twinning semantics, redefine `copy'.
         external
@@ -189,7 +189,7 @@ feature -- Duplication
             is_equal: Result ~ Current
         end
 
-    copy (other: like Current)
+    copy (other: questionLike Current)
             -- Update current object using fields of object attached
             -- to `other', so as to yield equal objects.
         require
@@ -201,7 +201,7 @@ feature -- Duplication
             is_equal: Current ~ other
         end
 
-    frozen standard_copy (other: like Current)
+    frozen standard_copy (other: questionLike Current)
             -- Copy every field of `other' onto corresponding field
             -- of current object.
         require
@@ -213,7 +213,7 @@ feature -- Duplication
             is_standard_equal: standard_is_equal (other)
         end
 
-    frozen clone (other: detachable ANY): like other
+    frozen clone (other: detachable ANY): questionLike other
             -- Void if `other' is void; otherwise new object
             -- equal to `other'
             --
@@ -229,7 +229,7 @@ feature -- Duplication
             equal: Result ~ other
         end
 
-    frozen standard_clone (other: detachable ANY): like other
+    frozen standard_clone (other: detachable ANY): questionLike other
             -- Void if `other' is void; otherwise new object
             -- field-by-field identical to `other'.
             -- Always uses default copying semantics.
@@ -243,7 +243,7 @@ feature -- Duplication
             equal: standard_equal (Result, other)
         end
 
-    frozen standard_twin: like Current
+    frozen standard_twin: questionLike Current
             -- New object field-by-field identical to `other'.
             -- Always uses default copying semantics.
         external
@@ -253,7 +253,7 @@ feature -- Duplication
             equal: standard_equal (Result, Current)
         end
 
-    frozen deep_twin: like Current
+    frozen deep_twin: questionLike Current
             -- New object structure recursively duplicated from Current.
         external
             "built_in"
@@ -262,7 +262,7 @@ feature -- Duplication
             deep_equal: deep_equal (Current, Result)
         end
 
-    frozen deep_clone (other: detachable ANY): like other
+    frozen deep_clone (other: detachable ANY): questionLike other
             -- Void if `other' is void: otherwise, new object structure
             -- recursively duplicated from the one attached to `other'
         obsolete
@@ -275,7 +275,7 @@ feature -- Duplication
             deep_equal: deep_equal (other, Result)
         end
 
-    frozen deep_copy (other: like Current)
+    frozen deep_copy (other: questionLike Current)
             -- Effect equivalent to that of:
             --      `copy' (`other' . `deep_twin')
         require
@@ -374,7 +374,7 @@ feature -- Basic operations
         do
         end
 
-    frozen default: detachable like Current
+    frozen default: detachable questionLike Current
             -- Default value of object's type
         do
         end
@@ -388,7 +388,7 @@ feature -- Basic operations
             -- Result = Result.default
         end
 
-    frozen as_attached: attached like Current
+    frozen as_attached: attached questionLike Current
             -- Attached version of Current
             -- (Can be used during transitional period to convert
             -- non-void-safe classes to void-safe ones.)

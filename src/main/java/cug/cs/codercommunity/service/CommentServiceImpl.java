@@ -14,10 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -105,7 +102,7 @@ public class CommentServiceImpl implements CommentService{
         notification.setReceiver(receiver);
         notification.setOuterId(question.getId());
         notification.setType(typeEnum.getType());
-        notification.setGmtCreate(System.currentTimeMillis());
+        notification.setGmtCreate(new Date());
         notification.setStatus(NotificationStatusEnum.UNREAD.getStatus());
         notificationMapper.insert(notification);
     }
@@ -185,7 +182,7 @@ public class CommentServiceImpl implements CommentService{
             Comment comment = commentMapper.selectById(keyInteger);
             Integer likeCount = (Integer)map.get(key);
             comment.setLikeCount(likeCount);
-            comment.setGmtModified(System.currentTimeMillis());
+            comment.setGmtModified(new Date());
             counter += commentMapper.updateById(comment);
             redisTemplate.opsForHash().delete("MAP_COMMENT_LIKE_COUNT", key);
         }

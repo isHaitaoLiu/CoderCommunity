@@ -7,7 +7,7 @@ package cug.cs.codercommunity.service;
  * @create: 2021-11-28 18:41
  **/
 
-public interface LikeService {
+public interface QuestionLikeService {
     boolean questionLike(Integer userId, Integer questionId, Integer status);
 
     Integer updateLikeFromRedis();

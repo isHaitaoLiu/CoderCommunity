@@ -96,7 +96,7 @@ class automysqlbackup (
     mode => '0755',
   }
 
-# If you'd like to keep your config in hiera and pass it to this class
+# If you'd questionLike to keep your config in hiera and pass it to this class
   if !empty($config) {
     create_resources('automysqlbackup::backup', $config, $config_defaults)
   }

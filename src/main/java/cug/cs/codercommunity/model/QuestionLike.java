@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 /**
  * @program: codercommunity
  * @description: 点赞实体类
@@ -16,12 +18,12 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Like {
+public class QuestionLike {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
     private Integer userId;
     private Integer questionId;
     private Integer status;
-    private Long gmtCreate;
-    private Long gmtModified;
+    private Date gmtCreate;
+    private Date gmtModified;
 }

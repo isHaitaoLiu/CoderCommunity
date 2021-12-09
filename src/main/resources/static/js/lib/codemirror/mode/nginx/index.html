@@ -88,7 +88,7 @@ server {
     rewrite / /index.php;
   }
 
-  location ~ .php/ { ## Forward paths like /js/index.php/x.js to relevant handler
+  location ~ .php/ { ## Forward paths questionLike /js/index.php/x.js to relevant handler
     rewrite ^/(.*.php)/ /$1 last;
   }
 
@@ -154,7 +154,7 @@ server {
     rewrite / /index.php;
   }
 
-  location ~ .php/ { ## Forward paths like /js/index.php/x.js to relevant handler
+  location ~ .php/ { ## Forward paths questionLike /js/index.php/x.js to relevant handler
     rewrite ^/(.*.php)/ /$1 last;
   }
 

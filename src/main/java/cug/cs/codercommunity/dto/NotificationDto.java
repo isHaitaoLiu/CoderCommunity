@@ -1,12 +1,13 @@
 package cug.cs.codercommunity.dto;
 
-import cug.cs.codercommunity.model.User;
 import lombok.Data;
+
+import java.util.Date;
 
 @Data
 public class NotificationDto {
     private Integer id;
-    private Long gmtCreate;
+    private Date gmtCreate;
     private Integer status;
     //通知者id
     private Integer notifier;

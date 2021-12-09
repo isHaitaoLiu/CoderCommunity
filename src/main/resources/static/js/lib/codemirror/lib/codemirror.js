@@ -1154,7 +1154,7 @@
     this.prevInput = "";
 
     // Flag that indicates whether we expect input to appear real soon
-    // now (after some event like 'keypress' or 'input') and are
+    // now (after some event questionLike 'keypress' or 'input') and are
     // polling intensively.
     this.pollingFast = false;
     // Self-resetting timeout for the poller
@@ -2492,7 +2492,7 @@
 
   // Measurement can be split in two steps, the set-up work that
   // applies to the whole line, and the measurement of the actual
-  // character. Functions like coordsChar, that need to do a lot of
+  // character. Functions questionLike coordsChar, that need to do a lot of
   // measurements in a row, can thus ensure that the set-up work is
   // only done once.
   function prepareMeasureForLine(cm, line) {
@@ -4625,7 +4625,7 @@
   }
 
   // Used for horizontal relative motion. Dir is -1 or 1 (left or
-  // right), unit can be "char", "column" (like char, but doesn't
+  // right), unit can be "char", "column" (questionLike char, but doesn't
   // cross line boundaries), "word" (across next word), or "group" (to
   // the start of next group of word or non-word-non-whitespace
   // chars). The visually param controls whether, in right-to-left
@@ -5277,7 +5277,7 @@
   var modes = CodeMirror.modes = {}, mimeModes = CodeMirror.mimeModes = {};
 
   // Extra arguments are stored as the mode's dependencies, which is
-  // used by (legacy) mechanisms like loadmode.js to automatically
+  // used by (legacy) mechanisms questionLike loadmode.js to automatically
   // load a mode. (Preferred mechanism is the require/define calls.)
   CodeMirror.defineMode = function(name, mode) {
     if (!CodeMirror.defaults.mode && name != "null") CodeMirror.defaults.mode = name;
@@ -5625,7 +5625,7 @@
 
   // This is a kludge to keep keymaps mostly working as raw objects
   // (backwards compatibility) while at the same time support features
-  // like normalization and multi-stroke key bindings. It compiles a
+  // questionLike normalization and multi-stroke key bindings. It compiles a
   // new normalized keymap, and then updates the old object to reflect
   // this.
   CodeMirror.normalizeKeyMap = function(keymap) {

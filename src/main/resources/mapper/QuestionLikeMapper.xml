@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cug.cs.codercommunity.mapper.LikeMapper">
+<mapper namespace="cug.cs.codercommunity.mapper.QuestionLikeMapper">
     <insert id="insertOrUpdateLike">
-        insert into `like`(user_id, question_id, status, gmt_create, gmt_modified)
+        insert into `question_like`(user_id, question_id, status, gmt_create, gmt_modified)
         values (#{userId}, #{questionId}, #{status}, #{gmtCreate}, #{gmtModified})
         on duplicate key
         update status = #{status}, gmt_modified = #{gmtModified}

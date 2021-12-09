@@ -4,6 +4,8 @@ import cug.cs.codercommunity.model.User;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 
 @NoArgsConstructor
 @Data
@@ -12,8 +14,8 @@ public class CommentVO {
     private Integer parentId;
     private Integer type;
     private Integer commentator;
-    private Long gmtCreate;
-    private Long gmtModified;
+    private Date gmtCreate;
+    private Date gmtModified;
     private Integer likeCount;
     private String content;
     private User user;

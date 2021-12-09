@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 /**
  * @program: codercommunity
  * @description: 评论点赞表
@@ -22,6 +24,6 @@ public class CommentLike {
     private Integer userId;
     private Integer commentId;
     private Integer status;
-    private Long gmtCreate;
-    private Long gmtModified;
+    private Date gmtCreate;
+    private Date gmtModified;
 }

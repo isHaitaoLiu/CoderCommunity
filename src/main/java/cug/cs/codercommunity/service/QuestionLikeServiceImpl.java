@@ -4,7 +4,7 @@ import cug.cs.codercommunity.enums.KafkaNotificationTopicEnum;
 import cug.cs.codercommunity.enums.LikeStatusEnum;
 import cug.cs.codercommunity.mapper.CommentLikeMapper;
 import cug.cs.codercommunity.mapper.CommentMapper;
-import cug.cs.codercommunity.mapper.LikeMapper;
+import cug.cs.codercommunity.mapper.QuestionLikeMapper;
 import cug.cs.codercommunity.mapper.QuestionMapper;
 import cug.cs.codercommunity.message.notification.NotificationMessageProducer;
 import cug.cs.codercommunity.model.*;
@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -25,12 +26,12 @@ import java.util.Map;
 
 @Slf4j
 @Service
-public class LikeServiceImpl implements LikeService{
+public class QuestionLikeServiceImpl implements QuestionLikeService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
-    private LikeMapper likeMapper;
+    private QuestionLikeMapper questionLikeMapper;
     @Autowired
     private CommentLikeMapper commentLikeMapper;
     @Autowired
@@ -97,18 +98,18 @@ public class LikeServiceImpl implements LikeService{
     @Override
     @Transactional
     public Integer updateLikeFromRedis() {
-        Like like = new Like();
+        QuestionLike questionLike = new QuestionLike();
         Integer counter = 0;
         Map<Object, Object> map = redisTemplate.opsForHash().entries("MAP_QUESTION_LIKE");
         for (Object key : map.keySet()) {
             String keyStr = (String) key;
             String[] strings = keyStr.split(":");
-            like.setUserId(Integer.valueOf(strings[0]));
-            like.setQuestionId(Integer.valueOf(strings[1]));
-            like.setStatus((int)map.get(key));
-            like.setGmtCreate(System.currentTimeMillis());
-            like.setGmtModified(System.currentTimeMillis());
-            counter += likeMapper.insertOrUpdateLike(like);
+            questionLike.setUserId(Integer.valueOf(strings[0]));
+            questionLike.setQuestionId(Integer.valueOf(strings[1]));
+            questionLike.setStatus((int)map.get(key));
+            questionLike.setGmtCreate(new Date());
+            questionLike.setGmtModified(new Date());
+            counter += questionLikeMapper.insertOrUpdateLike(questionLike);
             redisTemplate.opsForHash().delete("MAP_QUESTION_LIKE", key);
         }
         return counter;
@@ -127,8 +128,8 @@ public class LikeServiceImpl implements LikeService{
             commentLike.setUserId(Integer.valueOf(strings[0]));
             commentLike.setCommentId(Integer.valueOf(strings[1]));
             commentLike.setStatus((int)map.get(key));
-            commentLike.setGmtCreate(System.currentTimeMillis());
-            commentLike.setGmtModified(System.currentTimeMillis());
+            commentLike.setGmtCreate(new Date());
+            commentLike.setGmtModified(new Date());
             counter += commentLikeMapper.insertOrUpdateLike(commentLike);
             redisTemplate.opsForHash().delete("MAP_COMMENT_LIKE", key);
         }

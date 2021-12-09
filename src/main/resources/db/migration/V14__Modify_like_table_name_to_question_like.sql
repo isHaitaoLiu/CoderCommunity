@@ -1,0 +1,1 @@
+alter table `questionLike` rename to `question_like`;

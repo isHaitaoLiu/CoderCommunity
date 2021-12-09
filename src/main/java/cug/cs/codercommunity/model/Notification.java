@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @NoArgsConstructor
 @Data
 public class Notification {
@@ -15,6 +17,6 @@ public class Notification {
     private Integer receiver;
     private Integer outerId;
     private Integer type;
-    private Long gmtCreate;
+    private Date gmtCreate;
     private Integer status;
 }

@@ -3,7 +3,7 @@ package cug.cs.codercommunity.controller;
 import cug.cs.codercommunity.dto.JsonResult;
 import cug.cs.codercommunity.exception.CustomStatus;
 import cug.cs.codercommunity.model.User;
-import cug.cs.codercommunity.service.LikeService;
+import cug.cs.codercommunity.service.QuestionLikeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -25,7 +25,7 @@ import java.util.Map;
 @Controller
 public class LikeController {
     @Autowired
-    private LikeService likeService;
+    private QuestionLikeService questionLikeService;
 
     @ResponseBody
     @PostMapping("/like/question")
@@ -35,7 +35,7 @@ public class LikeController {
         if (user == null){
             return new JsonResult<>(CustomStatus.NOT_LOGIN);
         }
-        boolean isSuccess = likeService.questionLike(
+        boolean isSuccess = questionLikeService.questionLike(
                 user.getId(),
                 Integer.valueOf(map.get("questionId")),
                 Integer.valueOf(map.get("status"))
@@ -51,7 +51,7 @@ public class LikeController {
         if (user == null){
             return new JsonResult<>(CustomStatus.NOT_LOGIN);
         }
-        boolean isSuccess = likeService.commentLike(
+        boolean isSuccess = questionLikeService.commentLike(
                 user.getId(),
                 Integer.valueOf(map.get("commentId")),
                 Integer.valueOf(map.get("status"))

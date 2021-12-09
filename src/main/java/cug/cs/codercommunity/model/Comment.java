@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @NoArgsConstructor
 @Data
 public class Comment {
@@ -14,8 +16,8 @@ public class Comment {
     private Integer parentId;
     private Integer type;
     private Integer commentator;
-    private Long gmtCreate;
-    private Long gmtModified;
+    private Date gmtCreate;
+    private Date gmtModified;
     private Integer likeCount;
     private String content;
 }

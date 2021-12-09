@@ -4,10 +4,10 @@ import cug.cs.codercommunity.dto.PageDto;
 import cug.cs.codercommunity.enums.LikeStatusEnum;
 import cug.cs.codercommunity.exception.CustomException;
 import cug.cs.codercommunity.exception.CustomStatus;
-import cug.cs.codercommunity.mapper.LikeMapper;
+import cug.cs.codercommunity.mapper.QuestionLikeMapper;
 import cug.cs.codercommunity.mapper.QuestionMapper;
 import cug.cs.codercommunity.mapper.UserMapper;
-import cug.cs.codercommunity.model.Like;
+import cug.cs.codercommunity.model.QuestionLike;
 import cug.cs.codercommunity.model.Question;
 import cug.cs.codercommunity.model.User;
 import cug.cs.codercommunity.vo.QuestionVO;
@@ -19,10 +19,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,7 +32,7 @@ public class QuestionServiceImpl implements QuestionService{
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
     @Autowired
-    private LikeMapper likeMapper;
+    private QuestionLikeMapper questionLikeMapper;
 
 
     /*
@@ -52,7 +49,7 @@ public class QuestionServiceImpl implements QuestionService{
         question.setDescription(description);
         question.setTag(tag);
         question.setCreator(user.getId());
-        question.setGmtCreate(System.currentTimeMillis());
+        question.setGmtCreate(new Date());
         question.setGmtModified(question.getGmtCreate());
         questionMapper.insertQuestion(question);
     }
@@ -178,11 +175,11 @@ public class QuestionServiceImpl implements QuestionService{
                 questionVO.setLikeStatus((Integer) likeObj);
             }else {
                 //缓存不存在，查询数据库
-                Like like;
-                like = likeMapper.selectByUserIdAndQuestionId(user.getId(), question.getId());
-                if (like != null){
+                QuestionLike questionLike;
+                questionLike = questionLikeMapper.selectByUserIdAndQuestionId(user.getId(), question.getId());
+                if (questionLike != null){
                     //数据库存在，设置状态
-                    questionVO.setLikeStatus(like.getStatus());
+                    questionVO.setLikeStatus(questionLike.getStatus());
                 }else {
                     //数据库不存在，设置不喜欢状态
                     questionVO.setLikeStatus(LikeStatusEnum.UNLIKE.getStatus());
@@ -214,14 +211,14 @@ public class QuestionServiceImpl implements QuestionService{
             question.setTitle(title);
             question.setDescription(description);
             question.setTag(tag);
-            question.setGmtCreate(System.currentTimeMillis());
+            question.setGmtCreate(new Date());
             question.setGmtModified(question.getGmtCreate());
             questionMapper.insertQuestion(question);
         }else {
             question.setTitle(title);
             question.setDescription(description);
             question.setTag(tag);
-            question.setGmtModified(System.currentTimeMillis());
+            question.setGmtModified(new Date());
             if (questionMapper.updateQuestion(question) == 0){
                 throw new CustomException(CustomStatus.QUESTION_NOT_FOUND);
             }
@@ -264,7 +261,7 @@ public class QuestionServiceImpl implements QuestionService{
             Question question = questionMapper.selectQuestionById(keyInteger);
             Integer likeCount = (Integer)map.get(key);
             question.setLikeCount(likeCount);
-            question.setGmtModified(System.currentTimeMillis());
+            question.setGmtModified(new Date());
             counter += questionMapper.updateLikeCount(question);
             redisTemplate.opsForHash().delete("MAP_QUESTION_LIKE_COUNT", key);
         }

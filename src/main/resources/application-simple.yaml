@@ -1,8 +1,10 @@
+# 请将此文件修改为application.yaml，并填写xxx所占用的参数
+
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/codercommunity
-    username: root
-    password: .lht@19961025.
+    url: jdbc:mysql://xxx:3306/codercommunity     # mysql配置的地址
+    username: xxx      # mysql用户名
+    password: xxx      # mysql密码
     type: com.alibaba.druid.pool.DruidDataSource
   flyway:
     enabled: true
@@ -11,13 +13,13 @@ spring:
     locations: classpath:db/migration
     baseline-version: 1
   redis:
-    host: 121.196.148.198
+    host: xxx      # redis配置的地址
     port: 6379
     database: 1
     connect-timeout: 10000ms
-    password:
+    password: xxx
   kafka:
-    bootstrap-servers: 121.196.148.198:9092,121.196.148.198:9093,121.196.148.198:9094
+    bootstrap-servers: xxx:9092,xxx:9093,xxx:9094   # kafka配置的地址
     producer:
       client-id: sakura-producer
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -32,9 +34,9 @@ spring:
 
 github:
   client:
-    redirect-url: http://localhost:8080/callback
-    id: 2c51895939179fdfd18c
-    secret: a1aca8b1b2ee7df986d5d58ae500c6412af52c19
+    redirect-url: http://xxx:8080/callback   # 应用的回调地址
+    id: xxx        # github给的应用id
+    secret: xxx    # github给的应用secret
     access-token-url: https://github.com/login/oauth/access_token
     user-info-url: https://api.github.com/user
 
@@ -48,10 +50,10 @@ logging:
     name: logs/coderCommunity.log
   level:      # 日志级别
     root: info
-#    cug:
-#      cs:
-#        codercommunity:
-#          mapper: debug  # 可以为不同的模块定义不同的日志级别
+  #    cug:
+  #      cs:
+  #        codercommunity:
+  #          mapper: debug  # 可以为不同的模块定义不同的日志级别
   logback:
     rollingpolicy:
       max-file-size: 200MB   # 日志最大文件大小

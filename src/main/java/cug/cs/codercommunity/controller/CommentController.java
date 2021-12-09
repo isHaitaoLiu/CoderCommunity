@@ -15,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
+import java.util.Date;
 import java.util.List;
 
 @Controller
@@ -39,7 +40,7 @@ public class CommentController {
         comment.setParentId(commentDto.getParentId());
         comment.setType(commentDto.getType());
         comment.setCommentator(user.getId());
-        comment.setGmtCreate(System.currentTimeMillis());
+        comment.setGmtCreate(new Date());
         comment.setGmtModified(comment.getGmtCreate());
         //comment.setLikeCount(0);
         comment.setContent(commentDto.getContent());

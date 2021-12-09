@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 /**
  * @program: codercommunity
  * @description: 通知消息消费者
@@ -48,7 +50,7 @@ public class NotificationMessageConsumer implements KafkaTopicConstant{
         notification.setReceiver(notificationMessage.getReceiver());
         notification.setNotifier(notificationMessage.getNotifier());
         notification.setStatus(NotificationStatusEnum.UNREAD.getStatus());
-        notification.setGmtCreate(System.currentTimeMillis());
+        notification.setGmtCreate(new Date());
         notificationMapper.insert(notification);
         log.info("消息消费成功:{}", notificationMessage);
     }
