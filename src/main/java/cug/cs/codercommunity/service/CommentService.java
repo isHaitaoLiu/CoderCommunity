@@ -17,9 +17,5 @@ public interface CommentService {
 
     void createNotification(Comment comment, Integer receiver, NotificationTypeEnum typeEnum, Question question);
 
-    Integer updateCommentLikeCountFromRedis();
-
     boolean commentLike(Integer userId, Integer commentId, Integer status);
-
-    Integer updateCommentLikeFromRedis();
 }

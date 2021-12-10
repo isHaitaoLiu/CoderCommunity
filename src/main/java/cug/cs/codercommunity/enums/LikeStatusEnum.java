@@ -27,4 +27,12 @@ public enum LikeStatusEnum {
     public String getMessage(){
         return message;
     }
+
+    public static LikeStatusEnum enumOfStatus(Integer status){
+        if (status == LIKE.getStatus().intValue()){
+            return LIKE;
+        }else {
+            return UNLIKE;
+        }
+    }
 }

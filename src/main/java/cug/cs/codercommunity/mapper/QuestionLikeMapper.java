@@ -18,4 +18,7 @@ public interface QuestionLikeMapper extends BaseMapper<QuestionLike> {
 
     @Select("select * from `question_like` where user_id = #{userId} and question_id = #{questionId}")
     QuestionLike selectByUserIdAndQuestionId(Integer userId, Integer questionId);
+
+    @Select("select status from `question_like` where user_id = #{userId} and question_id = #{questionId}")
+    Integer selectStatus(Integer userId, Integer questionId);
 }

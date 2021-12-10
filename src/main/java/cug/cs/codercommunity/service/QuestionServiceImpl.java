@@ -3,27 +3,27 @@ package cug.cs.codercommunity.service;
 import cug.cs.codercommunity.dto.PageDto;
 import cug.cs.codercommunity.enums.KafkaNotificationTopicEnum;
 import cug.cs.codercommunity.enums.LikeStatusEnum;
-import cug.cs.codercommunity.enums.RedisKeyEnum;
 import cug.cs.codercommunity.enums.UpdateScoreTypeEnum;
 import cug.cs.codercommunity.exception.CustomException;
 import cug.cs.codercommunity.exception.CustomStatus;
-import cug.cs.codercommunity.mapper.QuestionLikeMapper;
 import cug.cs.codercommunity.mapper.QuestionMapper;
 import cug.cs.codercommunity.mapper.UserMapper;
 import cug.cs.codercommunity.message.notification.NotificationMessageProducer;
-import cug.cs.codercommunity.model.*;
+import cug.cs.codercommunity.model.NotificationMessage;
+import cug.cs.codercommunity.model.Question;
+import cug.cs.codercommunity.model.User;
 import cug.cs.codercommunity.utils.RedisUtils;
-import cug.cs.codercommunity.vo.HotQuestionVO;
 import cug.cs.codercommunity.vo.QuestionVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -33,10 +33,6 @@ public class QuestionServiceImpl implements QuestionService{
     private QuestionMapper questionMapper;
     @Autowired
     private UserMapper userMapper;
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
-    @Autowired
-    private QuestionLikeMapper questionLikeMapper;
     @Autowired
     private NotificationMessageProducer notificationMessageProducer;
     @Autowired
@@ -135,7 +131,7 @@ public class QuestionServiceImpl implements QuestionService{
         List<QuestionVO> questionVOList = new ArrayList<>();
         for (Question question : questionList) {
             User creator = userMapper.selectUserById(question.getCreator());
-            QuestionVO questionVO = Question2QuestionVO(question, creator, user, redisTemplate);
+            QuestionVO questionVO = Question2QuestionVO(question, creator, user);
             questionVOList.add(questionVO);
         }
         //放入question列表
@@ -157,7 +153,7 @@ public class QuestionServiceImpl implements QuestionService{
             throw new CustomException(CustomStatus.QUESTION_NOT_FOUND);
         }
         User creator = userMapper.selectUserById(question.getCreator());
-        return Question2QuestionVO(question, creator, user, redisTemplate);
+        return Question2QuestionVO(question, creator, user);
     }
 
 
@@ -165,48 +161,26 @@ public class QuestionServiceImpl implements QuestionService{
      * @Author sakura
      * @Description question转questionVO
      * @Date 2021/11/28
-     * @Param [question, creator, user, redisTemplate]
+     * @Param [question, creator, user]
      * @return cug.cs.codercommunity.vo.QuestionVO
      **/
     @Override
-    public QuestionVO Question2QuestionVO(Question question, User creator, User user, RedisTemplate<String, Object> redisTemplate){
+    public QuestionVO Question2QuestionVO(Question question, User creator, User user){
         QuestionVO questionVO = new QuestionVO();
         BeanUtils.copyProperties(question, questionVO);
         questionVO.setUser(creator);
-        //接下来设置点赞状态
-        Object likeObj;
+        //设置点赞状态
         if (user != null){
-            //先查询缓存，有可能在缓存中更新过
-            likeObj = redisTemplate.opsForHash().get(RedisKeyEnum.MAP_QUESTION_LIKE.getKey(), user.getId() + ":" + question.getId());
-            if (likeObj != null) {
-                //缓存存在，直接设置
-                questionVO.setLikeStatus((Integer) likeObj);
-            }else {
-                //缓存不存在，查询数据库
-                QuestionLike questionLike;
-                questionLike = questionLikeMapper.selectByUserIdAndQuestionId(user.getId(), question.getId());
-                if (questionLike != null){
-                    //数据库存在，设置状态
-                    questionVO.setLikeStatus(questionLike.getStatus());
-                }else {
-                    //数据库不存在，设置不喜欢状态
-                    questionVO.setLikeStatus(LikeStatusEnum.UNLIKE.getStatus());
-                }
-            }
+            Integer likeStatus = redisUtils.getAndSetQuestionLikeStatus(user.getId(), question.getId());
+            questionVO.setLikeStatus(likeStatus);
         }else {
             //用户未登录，设置不喜欢状态
             questionVO.setLikeStatus(LikeStatusEnum.UNLIKE.getStatus());
         }
+        //设置点赞数
+        Integer likeCount = redisUtils.getAndSetQuestionLikeCount(question.getId(), question.getLikeCount());
+        questionVO.setLikeCount(likeCount);
 
-        //接下来获取点赞数, 点赞数有可能被更新过
-        Object likeCount = redisTemplate.opsForHash().get(RedisKeyEnum.MAP_QUESTION_LIKE_COUNT.getKey(), String.valueOf(question.getId()));
-        if (likeCount == null){
-            //将点赞信息存储在redis中
-            redisTemplate.opsForHash().put(RedisKeyEnum.MAP_QUESTION_LIKE_COUNT.getKey(), String.valueOf(question.getId()), question.getLikeCount());
-        }else {
-            //设置最新的点赞数
-            questionVO.setLikeCount((Integer) likeCount);
-        }
         return questionVO;
     }
 
@@ -261,22 +235,6 @@ public class QuestionServiceImpl implements QuestionService{
         return relatedQuestionVO;
     }
 
-    @Override
-    @Transactional
-    public Integer updateQuestionLikeCountFromRedis() {
-        Integer counter = 0;
-        Map<Object, Object> map = redisTemplate.opsForHash().entries(RedisKeyEnum.MAP_QUESTION_LIKE_COUNT.getKey());
-        for (Object key : map.keySet()) {
-            Integer keyInteger = Integer.valueOf((String) key);
-            Question question = questionMapper.selectQuestionById(keyInteger);
-            Integer likeCount = (Integer) map.get(key);
-            question.setLikeCount(likeCount);
-            question.setGmtModified(new Date());
-            counter += questionMapper.updateLikeCount(question);
-            redisTemplate.opsForHash().delete(RedisKeyEnum.MAP_QUESTION_LIKE_COUNT.getKey(), key);
-        }
-        return counter;
-    }
 
 
     /*
@@ -288,11 +246,10 @@ public class QuestionServiceImpl implements QuestionService{
      **/
     @Override
     public boolean questionLike(Integer userId, Integer questionId, Integer status) {
-        String key = userId + ":" + questionId;
+        //更新问题点赞状态
+        redisUtils.updateQuestionLikeStatus(userId, questionId, LikeStatusEnum.enumOfStatus(status));
+        //点赞，发送消息
         if (status.equals(LikeStatusEnum.UNLIKE.getStatus())){
-            //当前状态为未点赞，则进行点赞
-            redisTemplate.opsForHash().put(RedisKeyEnum.MAP_QUESTION_LIKE.getKey(), key, LikeStatusEnum.LIKE.getStatus());
-            redisTemplate.opsForHash().increment(RedisKeyEnum.MAP_QUESTION_LIKE_COUNT.getKey(), String.valueOf(questionId), 1L);
             //发送kafka消息
             NotificationMessage notificationMessage = new NotificationMessage();
             notificationMessage.setTopic(KafkaNotificationTopicEnum.TOPIC_LIKE_QUESTION.getTopic());
@@ -301,60 +258,7 @@ public class QuestionServiceImpl implements QuestionService{
             notificationMessage.setReceiver(question.getCreator());
             notificationMessage.setOuterId(questionId);
             notificationMessageProducer.sendMessage(notificationMessage);
-            redisUtils.updateQuestionScoreByType(questionId, UpdateScoreTypeEnum.LIKE);
-        }else {
-            redisTemplate.opsForHash().put(RedisKeyEnum.MAP_QUESTION_LIKE.getKey(), key, LikeStatusEnum.UNLIKE.getStatus());
-            redisTemplate.opsForHash().increment(RedisKeyEnum.MAP_QUESTION_LIKE_COUNT.getKey(), String.valueOf(questionId), -1L);
-            redisUtils.updateQuestionScoreByType(questionId, UpdateScoreTypeEnum.UNLIKE);
-
         }
         return true;
-    }
-
-
-    @Override
-    @Transactional
-    public Integer updateQuestionLikeFromRedis() {
-        QuestionLike questionLike = new QuestionLike();
-        Integer counter = 0;
-        Map<Object, Object> map = redisTemplate.opsForHash().entries(RedisKeyEnum.MAP_QUESTION_LIKE.getKey());
-        for (Object key : map.keySet()) {
-            String keyStr = (String) key;
-            String[] strings = keyStr.split(":");
-            questionLike.setUserId(Integer.valueOf(strings[0]));
-            questionLike.setQuestionId(Integer.valueOf(strings[1]));
-            questionLike.setStatus((int)map.get(key));
-            questionLike.setGmtCreate(new Date());
-            questionLike.setGmtModified(new Date());
-            counter += questionLikeMapper.insertOrUpdateLike(questionLike);
-            redisTemplate.opsForHash().delete(RedisKeyEnum.MAP_QUESTION_LIKE.getKey(), key);
-        }
-        return counter;
-    }
-
-    /*
-     * @Author sakura
-     * @Description 从redis中查询前10个热点问题，用于前端展示
-     * @Date 2021/12/9
-     * @Param []
-     * @return java.util.List<cug.cs.codercommunity.vo.HotQuestionVO>
-     **/
-    @Override
-    public List<HotQuestionVO> getHotQuestionsFromRedis() {
-        //从redis获取前10条热门问题的questionId
-        Set<Object> questionIds = redisTemplate.opsForZSet().reverseRange(RedisKeyEnum.ZSET_QUESTION_SCORE.getKey(), 0L, 10L);
-        List<HotQuestionVO> res = new ArrayList<>();
-        if (questionIds == null) return res;
-        //获取title和热度score
-        for (Object id : questionIds) {
-            HotQuestionVO hotQuestionVO = new HotQuestionVO();
-            hotQuestionVO.setId(Integer.valueOf((String) id));
-            Object title = redisTemplate.opsForHash().get(RedisKeyEnum.MAP_QUESTION_TITLE.getKey(), String.valueOf(id));
-            hotQuestionVO.setTitle((String) title);
-            Double score = redisTemplate.opsForZSet().score(RedisKeyEnum.ZSET_QUESTION_SCORE.getKey(), id);
-            hotQuestionVO.setScore(score != null ? score : 0);
-            res.add(hotQuestionVO);
-        }
-        return res;
     }
 }

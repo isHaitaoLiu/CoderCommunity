@@ -12,9 +12,7 @@ import cug.cs.codercommunity.utils.RedisUtils;
 import cug.cs.codercommunity.vo.CommentVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,11 +28,7 @@ public class CommentServiceImpl implements CommentService{
     @Autowired
     private NotificationMapper notificationMapper;
     @Autowired
-    private CommentLikeMapper commentLikeMapper;
-    @Autowired
     private NotificationMessageProducer notificationMessageProducer;
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
     private RedisUtils redisUtils;
@@ -149,33 +143,15 @@ public class CommentServiceImpl implements CommentService{
             //缓存处理开始
 
             //查询当前用户是否点赞
-            if (user == null){
-                //如果用户不存在，直接设置未点赞
+            if (user != null){
+                Integer likeStatus = redisUtils.getAndSetCommentLikeStatus(user.getId(), comment.getId());
+                commentVO.setLikeStatus(likeStatus);
+            }else {
                 commentVO.setLikeStatus(LikeStatusEnum.UNLIKE.getStatus());
-            }else {
-                //当前用户已经登录，查找redis，是否更新过
-                Object redisLike = redisTemplate.opsForHash().get(RedisKeyEnum.MAP_COMMENT_LIKE.getKey(), user.getId() + ":" + commentVO.getId());
-                if (redisLike != null){
-                    //设置为缓存中的状态
-                    commentVO.setLikeStatus((Integer)redisLike);
-                }else {
-                    //查询数据库，设置
-                    CommentLike dbLike = commentLikeMapper.selectByUserIdAndCommentId(user.getId(), commentVO.getId());
-                    if (dbLike != null){
-                        commentVO.setLikeStatus(dbLike.getStatus());
-                    }else {
-                        commentVO.setLikeStatus(LikeStatusEnum.UNLIKE.getStatus());
-                    }
-                }
-            }
-            //设置redis总数
-            Object redis_count = redisTemplate.opsForHash().get(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT.getKey(), String.valueOf(commentVO.getId()));
-            if (redis_count == null){
-                redisTemplate.opsForHash().put(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT.getKey(), String.valueOf(commentVO.getId()), commentVO.getLikeCount());
-            }else {
-                commentVO.setLikeCount((Integer)redis_count);
             }
 
+            Integer likeCount = redisUtils.getAndSetCommentLikeCount(comment.getId(), comment.getLikeCount());
+            comment.setLikeCount(likeCount);
 
             return commentVO;
         }).collect(Collectors.toList());
@@ -183,30 +159,12 @@ public class CommentServiceImpl implements CommentService{
         return commentVOList;
     }
 
-    @Override
-    public Integer updateCommentLikeCountFromRedis(){
-        Integer counter = 0;
-        Map<Object, Object> map = redisTemplate.opsForHash().entries(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT.getKey());
-        for (Object key : map.keySet()) {
-            Integer keyInteger = Integer.valueOf((String) key);
-            Comment comment = commentMapper.selectById(keyInteger);
-            Integer likeCount = (Integer) map.get(key);
-            comment.setLikeCount(likeCount);
-            comment.setGmtModified(new Date());
-            counter += commentMapper.updateById(comment);
-            redisTemplate.opsForHash().delete(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT.getKey(), key);
-        }
-        return counter;
-    }
-
 
     @Override
     public boolean commentLike(Integer userId, Integer commentId, Integer status) {
         String key = userId + ":" + commentId;
+        redisUtils.updateCommentLikeStatus(userId, commentId, LikeStatusEnum.enumOfStatus(status));
         if (status.equals(LikeStatusEnum.UNLIKE.getStatus())){
-            //当前状态为未点赞，则进行点赞
-            redisTemplate.opsForHash().put(RedisKeyEnum.MAP_COMMENT_LIKE.getKey(), key, LikeStatusEnum.LIKE.getStatus());
-            redisTemplate.opsForHash().increment(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT.getKey(), String.valueOf(commentId), 1L);
             //发送kafka消息
             NotificationMessage notificationMessage = new NotificationMessage();
             notificationMessage.setTopic(KafkaNotificationTopicEnum.TOPIC_LIKE_COMMENT.getTopic());
@@ -216,34 +174,8 @@ public class CommentServiceImpl implements CommentService{
             Question question = questionMapper.selectQuestionById(comment.getParentId());
             notificationMessage.setOuterId(question.getId());
             notificationMessageProducer.sendMessage(notificationMessage);
-            redisUtils.updateQuestionScoreByType(question.getId(), UpdateScoreTypeEnum.LIKE);
-        }else {
-            redisTemplate.opsForHash().put(RedisKeyEnum.MAP_COMMENT_LIKE.getKey(), key, LikeStatusEnum.UNLIKE.getStatus());
-            redisTemplate.opsForHash().increment(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT.getKey(), String.valueOf(commentId), -1L);
-            Comment comment = commentMapper.selectById(commentId);
-            Question question = questionMapper.selectQuestionById(comment.getParentId());
-            redisUtils.updateQuestionScoreByType(question.getId(), UpdateScoreTypeEnum.UNLIKE);
         }
         return true;
     }
 
-    @Override
-    @Transactional
-    public Integer updateCommentLikeFromRedis() {
-        CommentLike commentLike = new CommentLike();
-        Integer counter = 0;
-        Map<Object, Object> map = redisTemplate.opsForHash().entries(RedisKeyEnum.MAP_COMMENT_LIKE.getKey());
-        for (Object key : map.keySet()) {
-            String keyStr = (String) key;
-            String[] strings = keyStr.split(":");
-            commentLike.setUserId(Integer.valueOf(strings[0]));
-            commentLike.setCommentId(Integer.valueOf(strings[1]));
-            commentLike.setStatus((int)map.get(key));
-            commentLike.setGmtCreate(new Date());
-            commentLike.setGmtModified(new Date());
-            counter += commentLikeMapper.insertOrUpdateLike(commentLike);
-            redisTemplate.opsForHash().delete(RedisKeyEnum.MAP_COMMENT_LIKE.getKey(), key);
-        }
-        return counter;
-    }
 }

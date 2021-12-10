@@ -42,6 +42,9 @@ public interface QuestionMapper extends BaseMapper<Question>{
     @Update("update question set like_count = #{likeCount} where id = #{id}")
     Integer updateLikeCount(Question question);
 
+    @Select("select like_count from question where id = #{questionId}")
+    Integer selectLikeCount(Integer questionId);
+
     @Select("select * from question order by (view_count * 1 + like_count * 2 + comment_count * 3) desc limit #{offset}, #{size}")
     List<Question> selectHotQuestions(Integer offset, Integer size);
 }
