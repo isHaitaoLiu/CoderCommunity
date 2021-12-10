@@ -9,4 +9,13 @@
         on duplicate key
             update status = #{status}, gmt_modified = #{gmtModified}
     </insert>
+
+    <select id="selectByUserIdAndCommentId" resultType="cug.cs.codercommunity.model.CommentLike">
+        select * from `comment_like` where user_id = #{userId} and comment_id = #{commentId}
+    </select>
+
+    <select id="selectStatus" resultType="integer">
+        select status from `comment_like` where user_id = #{userId} and comment_id = #{commentId}
+    </select>
+
 </mapper>

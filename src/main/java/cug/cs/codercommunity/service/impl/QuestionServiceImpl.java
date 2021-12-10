@@ -1,5 +1,6 @@
-package cug.cs.codercommunity.service;
+package cug.cs.codercommunity.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import cug.cs.codercommunity.dto.PageDto;
 import cug.cs.codercommunity.enums.KafkaNotificationTopicEnum;
 import cug.cs.codercommunity.enums.LikeStatusEnum;
@@ -12,6 +13,7 @@ import cug.cs.codercommunity.message.notification.NotificationMessageProducer;
 import cug.cs.codercommunity.model.NotificationMessage;
 import cug.cs.codercommunity.model.Question;
 import cug.cs.codercommunity.model.User;
+import cug.cs.codercommunity.service.QuestionService;
 import cug.cs.codercommunity.utils.RedisUtils;
 import cug.cs.codercommunity.vo.QuestionVO;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +30,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class QuestionServiceImpl implements QuestionService{
+public class QuestionServiceImpl implements QuestionService {
     @Autowired
     private QuestionMapper questionMapper;
     @Autowired
@@ -51,26 +53,19 @@ public class QuestionServiceImpl implements QuestionService{
         Question question = new Question();
         question.setTitle(title);
         question.setDescription(description);
-        question.setTag(tag);
-        question.setCreator(user.getId());
         question.setGmtCreate(new Date());
         question.setGmtModified(question.getGmtCreate());
-        questionMapper.insertQuestion(question);
+        question.setCreator(user.getId());
+        question.setCommentCount(0);
+        question.setViewCount(0);
+        question.setLikeCount(0);
+        question.setTag(tag);
+        int rows = questionMapper.insert(question);
+        if (rows != 1){
+            throw new CustomException(CustomStatus.INSERT_FAILED);
+        }
     }
 
-    @Override
-    public List<QuestionVO> getAllQuestionVO() {
-        List<Question> questionList = questionMapper.selectAllQuestion();
-        List<QuestionVO> questionVOList = new ArrayList<>();
-        for (Question question : questionList) {
-            QuestionVO questionVO = new QuestionVO();
-            User user = userMapper.selectUserById(question.getCreator());
-            BeanUtils.copyProperties(question, questionVO);
-            questionVO.setUser(user);
-            questionVOList.add(questionVO);
-        }
-        return questionVOList;
-    }
 
     /**
      * @Author sakura
@@ -83,9 +78,10 @@ public class QuestionServiceImpl implements QuestionService{
     public PageDto<QuestionVO> getOnePage(Integer page, Integer size, User user) {
         Integer totalCount;
         if (user == null){
-            totalCount = questionMapper.selectCount();
+            totalCount = questionMapper.selectCount(null);
         }else {
-            totalCount = questionMapper.selectCountByCreator(user.getId());
+            totalCount = questionMapper.selectCount(new LambdaQueryWrapper<Question>().eq(Question::getCreator, user.getId()));
+            //totalCount = questionMapper.selectCountByCreator(user.getId());
         }
         //开始为pageDto赋值
         PageDto<QuestionVO> pageDto = new PageDto<>();
@@ -130,7 +126,7 @@ public class QuestionServiceImpl implements QuestionService{
         }
         List<QuestionVO> questionVOList = new ArrayList<>();
         for (Question question : questionList) {
-            User creator = userMapper.selectUserById(question.getCreator());
+            User creator = userMapper.selectById(question.getCreator());
             QuestionVO questionVO = Question2QuestionVO(question, creator, user);
             questionVOList.add(questionVO);
         }
@@ -148,11 +144,11 @@ public class QuestionServiceImpl implements QuestionService{
      **/
     @Override
     public QuestionVO getQuestionById(Integer id, User user) {
-        Question question = questionMapper.selectQuestionById(id);
+        Question question = questionMapper.selectById(id);
         if (question == null){
             throw new CustomException(CustomStatus.QUESTION_NOT_FOUND);
         }
-        User creator = userMapper.selectUserById(question.getCreator());
+        User creator = userMapper.selectById(question.getCreator());
         return Question2QuestionVO(question, creator, user);
     }
 
@@ -186,22 +182,16 @@ public class QuestionServiceImpl implements QuestionService{
 
     @Override
     public void updateQuestion(String title, String description, String tag, User user, Integer questionId) {
-        Question question = questionMapper.selectQuestionById(questionId);
+        Question question = questionMapper.selectById(questionId);
         if (question == null){
-            question = new Question();
-            question.setCreator(user.getId());
-            question.setTitle(title);
-            question.setDescription(description);
-            question.setTag(tag);
-            question.setGmtCreate(new Date());
-            question.setGmtModified(question.getGmtCreate());
-            questionMapper.insertQuestion(question);
+            creatQuestion(title, description, tag, user);
         }else {
             question.setTitle(title);
             question.setDescription(description);
             question.setTag(tag);
             question.setGmtModified(new Date());
-            if (questionMapper.updateQuestion(question) == 0){
+            int rows = questionMapper.updateById(question);
+            if (rows != 1){
                 throw new CustomException(CustomStatus.QUESTION_NOT_FOUND);
             }
         }
@@ -209,7 +199,7 @@ public class QuestionServiceImpl implements QuestionService{
 
     @Override
     public void incView(Integer id) {
-        Question question = questionMapper.selectQuestionById(id);
+        Question question = questionMapper.selectById(id);
         questionMapper.incViewCount(question);
         //更新分数
         redisUtils.updateQuestionScoreByType(id, UpdateScoreTypeEnum.VIEW);
@@ -254,7 +244,7 @@ public class QuestionServiceImpl implements QuestionService{
             NotificationMessage notificationMessage = new NotificationMessage();
             notificationMessage.setTopic(KafkaNotificationTopicEnum.TOPIC_LIKE_QUESTION.getTopic());
             notificationMessage.setNotifier(userId);
-            Question question = questionMapper.selectQuestionById(questionId);
+            Question question = questionMapper.selectById(questionId);
             notificationMessage.setReceiver(question.getCreator());
             notificationMessage.setOuterId(questionId);
             notificationMessageProducer.sendMessage(notificationMessage);

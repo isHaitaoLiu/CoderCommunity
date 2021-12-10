@@ -1,4 +1,4 @@
-package cug.cs.codercommunity.service;
+package cug.cs.codercommunity.service.impl;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -8,6 +8,7 @@ import cug.cs.codercommunity.exception.CustomStatus;
 import cug.cs.codercommunity.mapper.*;
 import cug.cs.codercommunity.message.notification.NotificationMessageProducer;
 import cug.cs.codercommunity.model.*;
+import cug.cs.codercommunity.service.CommentService;
 import cug.cs.codercommunity.utils.RedisUtils;
 import cug.cs.codercommunity.vo.CommentVO;
 import org.springframework.beans.BeanUtils;
@@ -18,7 +19,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class CommentServiceImpl implements CommentService{
+public class CommentServiceImpl implements CommentService {
     @Autowired
     private CommentMapper commentMapper;
     @Autowired
@@ -59,7 +60,7 @@ public class CommentServiceImpl implements CommentService{
                 throw new CustomExceptionToJson(CustomStatus.COMMENT_NOT_FOUND);
             }
             //查询这条评论属于哪个问题
-            Question question = questionMapper.selectQuestionById(dbComment.getParentId());
+            Question question = questionMapper.selectById(dbComment.getParentId());
             if (question == null){
                 throw new CustomExceptionToJson(CustomStatus.QUESTION_NOT_FOUND);
             }
@@ -80,7 +81,7 @@ public class CommentServiceImpl implements CommentService{
             redisUtils.updateQuestionScoreByType(question.getId(), UpdateScoreTypeEnum.COMMENT);
         }else {
             //回复问题
-            Question question = questionMapper.selectQuestionById(comment.getParentId());
+            Question question = questionMapper.selectById(comment.getParentId());
             if (question == null){
                 throw new CustomExceptionToJson(CustomStatus.QUESTION_NOT_FOUND);
             }
@@ -171,7 +172,7 @@ public class CommentServiceImpl implements CommentService{
             notificationMessage.setNotifier(userId);
             Comment comment = commentMapper.selectById(commentId);
             notificationMessage.setReceiver(comment.getCommentator());
-            Question question = questionMapper.selectQuestionById(comment.getParentId());
+            Question question = questionMapper.selectById(comment.getParentId());
             notificationMessage.setOuterId(question.getId());
             notificationMessageProducer.sendMessage(notificationMessage);
         }

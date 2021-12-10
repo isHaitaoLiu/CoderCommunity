@@ -3,48 +3,25 @@ package cug.cs.codercommunity.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import cug.cs.codercommunity.model.Question;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
 @Mapper
 public interface QuestionMapper extends BaseMapper<Question>{
-    void insertQuestion(Question question);
 
-    List<Question> selectAllQuestion();
-
-    @Select("select * from question limit #{offset}, #{size}")
     List<Question> selectOnePage(Integer offset, Integer size);
 
-    @Select("select * from question where creator = #{creator} limit #{offset}, #{size}")
     List<Question> selectOnePageByCreator(Integer creator, Integer offset, Integer size);
 
-    @Select("select count(1) from question")
-    Integer selectCount();
+    Integer incViewCount(Question question);
 
-    @Select("select count(1) from question where creator = #{creator}")
-    Integer selectCountByCreator(Integer creator);
+    Integer incCommentCount(Question question);
 
-    @Select("select * from question where id = #{id}")
-    Question selectQuestionById(Integer id);
-
-    int updateQuestion(Question question);
-
-    @Update("update question set view_count = view_count + 1 where id = #{id}")
-    int incViewCount(Question question);
-
-    @Update("update question set comment_count = comment_count + 1 where id = #{id}")
-    void incCommentCount(Question question);
+    Integer updateLikeCount(Question question);
 
     List<Question> selectRelated(Question question);
 
-    @Update("update question set like_count = #{likeCount} where id = #{id}")
-    Integer updateLikeCount(Question question);
-
-    @Select("select like_count from question where id = #{questionId}")
     Integer selectLikeCount(Integer questionId);
 
-    @Select("select * from question order by (view_count * 1 + like_count * 2 + comment_count * 3) desc limit #{offset}, #{size}")
     List<Question> selectHotQuestions(Integer offset, Integer size);
 }

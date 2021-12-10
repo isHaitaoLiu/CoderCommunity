@@ -54,7 +54,7 @@ public class RedisUtils {
             redisTemplate.opsForZSet().incrementScore(RedisKeyEnum.ZSET_QUESTION_SCORE.getKey(), String.valueOf(questionId), typeEnum.getType().doubleValue());
         }else {
             //如果不存在，从数据库中检索，并且添加到redis
-            Question question = questionMapper.selectQuestionById(questionId);
+            Question question = questionMapper.selectById(questionId);
             redisTemplate.opsForHash().put(RedisKeyEnum.MAP_QUESTION_TITLE.getKey(), String.valueOf(questionId), question.getTitle());
             redisTemplate.opsForZSet().add(
                     RedisKeyEnum.ZSET_QUESTION_SCORE.getKey(),

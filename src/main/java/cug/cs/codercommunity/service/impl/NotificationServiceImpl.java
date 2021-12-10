@@ -1,4 +1,4 @@
-package cug.cs.codercommunity.service;
+package cug.cs.codercommunity.service.impl;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -15,6 +15,7 @@ import cug.cs.codercommunity.mapper.UserMapper;
 import cug.cs.codercommunity.model.Notification;
 import cug.cs.codercommunity.model.Question;
 import cug.cs.codercommunity.model.User;
+import cug.cs.codercommunity.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class NotificationServiceImpl implements NotificationService{
+public class NotificationServiceImpl implements NotificationService {
     @Autowired
     private NotificationMapper notificationMapper;
     @Autowired

@@ -10,8 +10,6 @@ import java.util.List;
 public interface QuestionService {
     void creatQuestion(String title, String description, String tag, User user);
 
-    List<QuestionVO> getAllQuestionVO();
-
     PageDto<QuestionVO> getOnePage(Integer page, Integer size, User user);
 
     QuestionVO getQuestionById(Integer id, User user);

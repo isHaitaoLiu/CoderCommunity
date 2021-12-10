@@ -81,7 +81,7 @@ public class TransDataFromRedis2DB {
         Map<Object, Object> map = redisUtils.getAllKeyValues(RedisKeyEnum.MAP_QUESTION_LIKE);
         for (Object key : map.keySet()) {
             Integer keyInteger = Integer.valueOf((String) key);
-            Question question = questionMapper.selectQuestionById(keyInteger);
+            Question question = questionMapper.selectById(keyInteger);
             Integer likeCount = (Integer) map.get(key);
             question.setLikeCount(likeCount);
             question.setGmtModified(new Date());
@@ -104,7 +104,7 @@ public class TransDataFromRedis2DB {
             commentLike.setStatus((int)map.get(key));
             commentLike.setGmtCreate(new Date());
             commentLike.setGmtModified(new Date());
-            commentLikeMapper.insertOrUpdateLike(commentLike);
+            counter += commentLikeMapper.insertOrUpdateLike(commentLike);
         }
         redisUtils.delete(RedisKeyEnum.MAP_COMMENT_LIKE);
         return counter;
@@ -120,7 +120,7 @@ public class TransDataFromRedis2DB {
             Integer likeCount = (Integer) map.get(key);
             comment.setLikeCount(likeCount);
             comment.setGmtModified(new Date());
-            commentMapper.updateById(comment);
+            counter += commentMapper.updateById(comment);
         }
         redisUtils.delete(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT);
         return counter;

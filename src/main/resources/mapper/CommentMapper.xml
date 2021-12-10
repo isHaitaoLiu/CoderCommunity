@@ -3,8 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="cug.cs.codercommunity.mapper.CommentMapper">
-    <insert id="insertComment">
-        insert into comment(parent_id, type, commentator, gmt_create, gmt_modified, content)
-        values(#{parentId}, #{type}, #{commentator}, #{gmtCreate}, #{gmtModified}, #{content})
-    </insert>
+    <select id="selectLikeCount" resultType="integer">
+        select like_count from comment where id = #{commentId}
+    </select>
 </mapper>

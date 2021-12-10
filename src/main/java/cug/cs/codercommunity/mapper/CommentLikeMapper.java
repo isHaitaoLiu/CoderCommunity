@@ -3,7 +3,6 @@ package cug.cs.codercommunity.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import cug.cs.codercommunity.model.CommentLike;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
 
 /**
  * @program: codercommunity
@@ -16,9 +15,7 @@ import org.apache.ibatis.annotations.Select;
 public interface CommentLikeMapper extends BaseMapper<CommentLike> {
     Integer insertOrUpdateLike(CommentLike commentLike);
 
-    @Select("select * from `comment_like` where user_id = #{userId} and comment_id = #{commentId}")
     CommentLike selectByUserIdAndCommentId(Integer userId, Integer commentId);
 
-    @Select("select status from `comment_like` where user_id = #{userId} and comment_id = #{commentId}")
     Integer selectStatus(Integer userId, Integer commentId);
 }

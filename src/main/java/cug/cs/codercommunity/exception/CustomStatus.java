@@ -5,6 +5,9 @@ public enum CustomStatus {
 
     //数据库问题
     QUESTION_NOT_FOUND(2001, "您找的问题已经删除或不存在，要不换个试试？"),
+    INSERT_FAILED(5001, "插入数据失败！"),
+    UPDATE_FAILED(5001, "插入数据失败！"),
+    DELETE_FAILED(5001, "插入数据失败！"),
 
     TARGET_PARAM_WRONG(2002, "没有选中任何评论或回复！"),
     NOT_LOGIN(2003, "当前操作需要登录，请登录后重试！"),
