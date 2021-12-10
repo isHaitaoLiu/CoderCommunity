@@ -177,7 +177,7 @@ public class QuestionServiceImpl implements QuestionService{
         Object likeObj;
         if (user != null){
             //先查询缓存，有可能在缓存中更新过
-            likeObj = redisTemplate.opsForHash().get("MAP_QUESTION_LIKE", user.getId() + ":" + question.getId());
+            likeObj = redisTemplate.opsForHash().get(RedisKeyEnum.MAP_QUESTION_LIKE.getKey(), user.getId() + ":" + question.getId());
             if (likeObj != null) {
                 //缓存存在，直接设置
                 questionVO.setLikeStatus((Integer) likeObj);
@@ -199,10 +199,10 @@ public class QuestionServiceImpl implements QuestionService{
         }
 
         //接下来获取点赞数, 点赞数有可能被更新过
-        Object likeCount = redisTemplate.opsForHash().get("MAP_QUESTION_LIKE_COUNT", String.valueOf(question.getId()));
+        Object likeCount = redisTemplate.opsForHash().get(RedisKeyEnum.MAP_QUESTION_LIKE_COUNT.getKey(), String.valueOf(question.getId()));
         if (likeCount == null){
             //将点赞信息存储在redis中
-            redisTemplate.opsForHash().put("MAP_QUESTION_LIKE_COUNT", String.valueOf(question.getId()), question.getLikeCount());
+            redisTemplate.opsForHash().put(RedisKeyEnum.MAP_QUESTION_LIKE_COUNT.getKey(), String.valueOf(question.getId()), question.getLikeCount());
         }else {
             //设置最新的点赞数
             questionVO.setLikeCount((Integer) likeCount);
@@ -265,7 +265,7 @@ public class QuestionServiceImpl implements QuestionService{
     @Transactional
     public Integer updateQuestionLikeCountFromRedis() {
         Integer counter = 0;
-        Map<Object, Object> map = redisTemplate.opsForHash().entries("MAP_QUESTION_LIKE_COUNT");
+        Map<Object, Object> map = redisTemplate.opsForHash().entries(RedisKeyEnum.MAP_QUESTION_LIKE_COUNT.getKey());
         for (Object key : map.keySet()) {
             Integer keyInteger = Integer.valueOf((String) key);
             Question question = questionMapper.selectQuestionById(keyInteger);
@@ -273,7 +273,7 @@ public class QuestionServiceImpl implements QuestionService{
             question.setLikeCount(likeCount);
             question.setGmtModified(new Date());
             counter += questionMapper.updateLikeCount(question);
-            redisTemplate.opsForHash().delete("MAP_QUESTION_LIKE_COUNT", key);
+            redisTemplate.opsForHash().delete(RedisKeyEnum.MAP_QUESTION_LIKE_COUNT.getKey(), key);
         }
         return counter;
     }
@@ -291,8 +291,8 @@ public class QuestionServiceImpl implements QuestionService{
         String key = userId + ":" + questionId;
         if (status.equals(LikeStatusEnum.UNLIKE.getStatus())){
             //当前状态为未点赞，则进行点赞
-            redisTemplate.opsForHash().put("MAP_QUESTION_LIKE", key, LikeStatusEnum.LIKE.getStatus());
-            redisTemplate.opsForHash().increment("MAP_QUESTION_LIKE_COUNT", String.valueOf(questionId), 1L);
+            redisTemplate.opsForHash().put(RedisKeyEnum.MAP_QUESTION_LIKE.getKey(), key, LikeStatusEnum.LIKE.getStatus());
+            redisTemplate.opsForHash().increment(RedisKeyEnum.MAP_QUESTION_LIKE_COUNT.getKey(), String.valueOf(questionId), 1L);
             //发送kafka消息
             NotificationMessage notificationMessage = new NotificationMessage();
             notificationMessage.setTopic(KafkaNotificationTopicEnum.TOPIC_LIKE_QUESTION.getTopic());
@@ -303,8 +303,8 @@ public class QuestionServiceImpl implements QuestionService{
             notificationMessageProducer.sendMessage(notificationMessage);
             redisUtils.updateQuestionScoreByType(questionId, UpdateScoreTypeEnum.LIKE);
         }else {
-            redisTemplate.opsForHash().put("MAP_QUESTION_LIKE", key, LikeStatusEnum.UNLIKE.getStatus());
-            redisTemplate.opsForHash().increment("MAP_QUESTION_LIKE_COUNT", String.valueOf(questionId), -1L);
+            redisTemplate.opsForHash().put(RedisKeyEnum.MAP_QUESTION_LIKE.getKey(), key, LikeStatusEnum.UNLIKE.getStatus());
+            redisTemplate.opsForHash().increment(RedisKeyEnum.MAP_QUESTION_LIKE_COUNT.getKey(), String.valueOf(questionId), -1L);
             redisUtils.updateQuestionScoreByType(questionId, UpdateScoreTypeEnum.UNLIKE);
 
         }
@@ -317,7 +317,7 @@ public class QuestionServiceImpl implements QuestionService{
     public Integer updateQuestionLikeFromRedis() {
         QuestionLike questionLike = new QuestionLike();
         Integer counter = 0;
-        Map<Object, Object> map = redisTemplate.opsForHash().entries("MAP_QUESTION_LIKE");
+        Map<Object, Object> map = redisTemplate.opsForHash().entries(RedisKeyEnum.MAP_QUESTION_LIKE.getKey());
         for (Object key : map.keySet()) {
             String keyStr = (String) key;
             String[] strings = keyStr.split(":");
@@ -327,7 +327,7 @@ public class QuestionServiceImpl implements QuestionService{
             questionLike.setGmtCreate(new Date());
             questionLike.setGmtModified(new Date());
             counter += questionLikeMapper.insertOrUpdateLike(questionLike);
-            redisTemplate.opsForHash().delete("MAP_QUESTION_LIKE", key);
+            redisTemplate.opsForHash().delete(RedisKeyEnum.MAP_QUESTION_LIKE.getKey(), key);
         }
         return counter;
     }
