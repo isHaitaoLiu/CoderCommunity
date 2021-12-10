@@ -3,6 +3,8 @@ package cug.cs.codercommunity.service;
 import cug.cs.codercommunity.dto.PageDto;
 import cug.cs.codercommunity.enums.KafkaNotificationTopicEnum;
 import cug.cs.codercommunity.enums.LikeStatusEnum;
+import cug.cs.codercommunity.enums.RedisKeyEnum;
+import cug.cs.codercommunity.enums.UpdateScoreTypeEnum;
 import cug.cs.codercommunity.exception.CustomException;
 import cug.cs.codercommunity.exception.CustomStatus;
 import cug.cs.codercommunity.mapper.QuestionLikeMapper;
@@ -10,6 +12,8 @@ import cug.cs.codercommunity.mapper.QuestionMapper;
 import cug.cs.codercommunity.mapper.UserMapper;
 import cug.cs.codercommunity.message.notification.NotificationMessageProducer;
 import cug.cs.codercommunity.model.*;
+import cug.cs.codercommunity.utils.RedisUtils;
+import cug.cs.codercommunity.vo.HotQuestionVO;
 import cug.cs.codercommunity.vo.QuestionVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -35,6 +39,8 @@ public class QuestionServiceImpl implements QuestionService{
     private QuestionLikeMapper questionLikeMapper;
     @Autowired
     private NotificationMessageProducer notificationMessageProducer;
+    @Autowired
+    private RedisUtils redisUtils;
 
 
     /*
@@ -231,6 +237,8 @@ public class QuestionServiceImpl implements QuestionService{
     public void incView(Integer id) {
         Question question = questionMapper.selectQuestionById(id);
         questionMapper.incViewCount(question);
+        //更新分数
+        redisUtils.updateQuestionScoreByType(id, UpdateScoreTypeEnum.VIEW);
     }
 
     @Override
@@ -255,13 +263,13 @@ public class QuestionServiceImpl implements QuestionService{
 
     @Override
     @Transactional
-    public Integer updateLikeCountFromRedis() {
+    public Integer updateQuestionLikeCountFromRedis() {
         Integer counter = 0;
         Map<Object, Object> map = redisTemplate.opsForHash().entries("MAP_QUESTION_LIKE_COUNT");
         for (Object key : map.keySet()) {
             Integer keyInteger = Integer.valueOf((String) key);
             Question question = questionMapper.selectQuestionById(keyInteger);
-            Integer likeCount = (Integer)map.get(key);
+            Integer likeCount = (Integer) map.get(key);
             question.setLikeCount(likeCount);
             question.setGmtModified(new Date());
             counter += questionMapper.updateLikeCount(question);
@@ -293,9 +301,12 @@ public class QuestionServiceImpl implements QuestionService{
             notificationMessage.setReceiver(question.getCreator());
             notificationMessage.setOuterId(questionId);
             notificationMessageProducer.sendMessage(notificationMessage);
+            redisUtils.updateQuestionScoreByType(questionId, UpdateScoreTypeEnum.LIKE);
         }else {
             redisTemplate.opsForHash().put("MAP_QUESTION_LIKE", key, LikeStatusEnum.UNLIKE.getStatus());
             redisTemplate.opsForHash().increment("MAP_QUESTION_LIKE_COUNT", String.valueOf(questionId), -1L);
+            redisUtils.updateQuestionScoreByType(questionId, UpdateScoreTypeEnum.UNLIKE);
+
         }
         return true;
     }
@@ -319,5 +330,31 @@ public class QuestionServiceImpl implements QuestionService{
             redisTemplate.opsForHash().delete("MAP_QUESTION_LIKE", key);
         }
         return counter;
+    }
+
+    /*
+     * @Author sakura
+     * @Description 从redis中查询前10个热点问题，用于前端展示
+     * @Date 2021/12/9
+     * @Param []
+     * @return java.util.List<cug.cs.codercommunity.vo.HotQuestionVO>
+     **/
+    @Override
+    public List<HotQuestionVO> getHotQuestionsFromRedis() {
+        //从redis获取前10条热门问题的questionId
+        Set<Object> questionIds = redisTemplate.opsForZSet().reverseRange(RedisKeyEnum.ZSET_QUESTION_SCORE.getKey(), 0L, 10L);
+        List<HotQuestionVO> res = new ArrayList<>();
+        if (questionIds == null) return res;
+        //获取title和热度score
+        for (Object id : questionIds) {
+            HotQuestionVO hotQuestionVO = new HotQuestionVO();
+            hotQuestionVO.setId(Integer.valueOf((String) id));
+            Object title = redisTemplate.opsForHash().get(RedisKeyEnum.MAP_QUESTION_TITLE.getKey(), String.valueOf(id));
+            hotQuestionVO.setTitle((String) title);
+            Double score = redisTemplate.opsForZSet().score(RedisKeyEnum.ZSET_QUESTION_SCORE.getKey(), id);
+            hotQuestionVO.setScore(score != null ? score : 0);
+            res.add(hotQuestionVO);
+        }
+        return res;
     }
 }

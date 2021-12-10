@@ -1,11 +1,12 @@
 package cug.cs.codercommunity.controller;
 
 
-import cug.cs.codercommunity.cache.HotTopicCache;
 import cug.cs.codercommunity.dto.PageDto;
 import cug.cs.codercommunity.service.QuestionService;
 import cug.cs.codercommunity.service.UserService;
+import cug.cs.codercommunity.vo.HotQuestionVO;
 import cug.cs.codercommunity.vo.QuestionVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
+@Slf4j
 @Controller
 public class IndexController {
     @Autowired
@@ -22,8 +24,6 @@ public class IndexController {
     @Autowired
     private QuestionService questionService;
 
-    @Autowired
-    private HotTopicCache hotTopicCache;
 
     @GetMapping("/")
     public String index(Model model,
@@ -31,8 +31,10 @@ public class IndexController {
                         @RequestParam(name = "size", defaultValue = "5") Integer size){
         PageDto<QuestionVO> pagination = questionService.getOnePage(page, size, null);
         model.addAttribute("pagination", pagination);
-        List<String> tags = hotTopicCache.getHots();
-        model.addAttribute("tags", tags);
+        //List<String> tags = hotTopicCache.getHots();
+        //model.addAttribute("tags", tags);
+        List<HotQuestionVO> hotQuestionVOList = questionService.getHotQuestionsFromRedis();
+        model.addAttribute("hotQuestions", hotQuestionVOList);
         return "index";
     }
 }

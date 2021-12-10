@@ -8,6 +8,7 @@ import cug.cs.codercommunity.exception.CustomStatus;
 import cug.cs.codercommunity.mapper.*;
 import cug.cs.codercommunity.message.notification.NotificationMessageProducer;
 import cug.cs.codercommunity.model.*;
+import cug.cs.codercommunity.utils.RedisUtils;
 import cug.cs.codercommunity.vo.CommentVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,9 @@ public class CommentServiceImpl implements CommentService{
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
+    @Autowired
+    private RedisUtils redisUtils;
+
     @Override
     public void addComment(Comment comment) {
         if (comment.getParentId() == null){
@@ -46,7 +50,7 @@ public class CommentServiceImpl implements CommentService{
         }
 
         CommentType c;
-        if (comment.getType() == 2){
+        if (comment.getType() == CommentType.COMMENT.getType().intValue()){
             c = CommentType.COMMENT;
         }else{
             c = CommentType.QUESTION;
@@ -77,6 +81,9 @@ public class CommentServiceImpl implements CommentService{
             notificationMessage.setOuterId(question.getId());
             notificationMessage.setTopic(KafkaNotificationTopicEnum.TOPIC_REPLY_COMMENT.getTopic());
             notificationMessageProducer.sendMessage(notificationMessage);
+
+            //更新redis评分数据
+            redisUtils.updateQuestionScoreByType(question.getId(), UpdateScoreTypeEnum.COMMENT);
         }else {
             //回复问题
             Question question = questionMapper.selectQuestionById(comment.getParentId());
@@ -93,6 +100,8 @@ public class CommentServiceImpl implements CommentService{
             notificationMessage.setTopic(KafkaNotificationTopicEnum.TOPIC_REPLY_QUESTION.getTopic());
             notificationMessageProducer.sendMessage(notificationMessage);
             //createNotification(comment, question.getCreator(), NotificationTypeEnum.REPLY_QUESTION, question);
+            //更新redis评分数据
+            redisUtils.updateQuestionScoreByType(question.getId(), UpdateScoreTypeEnum.COMMENT);
         }
     }
 
@@ -181,7 +190,7 @@ public class CommentServiceImpl implements CommentService{
         for (Object key : map.keySet()) {
             Integer keyInteger = Integer.valueOf((String) key);
             Comment comment = commentMapper.selectById(keyInteger);
-            Integer likeCount = (Integer)map.get(key);
+            Integer likeCount = (Integer) map.get(key);
             comment.setLikeCount(likeCount);
             comment.setGmtModified(new Date());
             counter += commentMapper.updateById(comment);
@@ -207,9 +216,13 @@ public class CommentServiceImpl implements CommentService{
             Question question = questionMapper.selectQuestionById(comment.getParentId());
             notificationMessage.setOuterId(question.getId());
             notificationMessageProducer.sendMessage(notificationMessage);
+            redisUtils.updateQuestionScoreByType(question.getId(), UpdateScoreTypeEnum.LIKE);
         }else {
             redisTemplate.opsForHash().put("MAP_COMMENT_LIKE", key, LikeStatusEnum.UNLIKE.getStatus());
             redisTemplate.opsForHash().increment("MAP_COMMENT_LIKE_COUNT", String.valueOf(commentId), -1L);
+            Comment comment = commentMapper.selectById(commentId);
+            Question question = questionMapper.selectQuestionById(comment.getParentId());
+            redisUtils.updateQuestionScoreByType(question.getId(), UpdateScoreTypeEnum.UNLIKE);
         }
         return true;
     }
