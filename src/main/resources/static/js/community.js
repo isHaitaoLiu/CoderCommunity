@@ -139,20 +139,7 @@ function questionLike(e) {
 
             if (response.code === 200) {
                 if (response.data === true){  //点赞或取消点赞操作成功
-                    if (status !== "0"){   //消赞
-                        status = "0";
-                        e.setAttribute("status", "0");
-                        thumbsUpFlag.css(
-                            {
-                                color: "black"
-                            }
-                        )
-                        let count = parseInt(likeCountSpan.text());
-                        count--;
-                        likeCountSpan.text(count);
-                        alert("消赞成功！");
-                    } else{
-                        status = "1";
+                    if (status === '0'){
                         e.setAttribute("status", "1");
                         thumbsUpFlag.css(
                             {
@@ -162,7 +149,16 @@ function questionLike(e) {
                         let count = parseInt(likeCountSpan.text());
                         count++;
                         likeCountSpan.text(count);
-                        alert("点赞成功！");
+                    }else {   //消赞
+                        e.setAttribute("status", "0");
+                        thumbsUpFlag.css(
+                            {
+                                color: "black"
+                            }
+                        )
+                        let count = parseInt(likeCountSpan.text());
+                        count--;
+                        likeCountSpan.text(count);
                     }
                 }
             } else {
@@ -190,28 +186,42 @@ function commentLike(e) {
             "commentId": commentId,
         }),
         success: function (response) {
-            let str = "#comment-thumbs-up-" + commentId;
-            console.log(str);
-            let thumbsUpFlag = $(str); //获取评论的点赞图标
+            let str1 = "#comment-thumbs-up-" + commentId;
+            let str2 = "#comment-like-count-span-" + commentId;
+            let thumbsUpFlag = $(str1); //获取评论的点赞图标
+            let likeCountSpan = $(str2); //获取评论的点赞图标
 
             if (response.code === 200) {
                 if (response.data === true){  //点赞或取消点赞操作成功
-                    if (status !== "0"){   //状态由点赞变为未点赞
-                        e.setAttribute("status", "0");
-                        thumbsUpFlag.css(
-                            {
-                                color: "black"
-                            }
-                        )
-                        alert("消赞成功！");
-                    } else{
+                    if (status === '0'){
                         e.setAttribute("status", "1");
                         thumbsUpFlag.css(
                             {
                                 color: "blue"
                             }
                         )
-                        alert("点赞成功！");
+                        if (likeCountSpan.text() === '赞'){
+                            likeCountSpan.text(1);
+                        }else {
+                            let count = parseInt(likeCountSpan.text());
+                            count++;
+                            likeCountSpan.text(count);
+                        }
+                    }else {   //状态由点赞变为未点赞
+                        e.setAttribute("status", "0");
+                        thumbsUpFlag.css(
+                            {
+                                color: "black"
+                            }
+                        )
+                        let count = parseInt(likeCountSpan.text());
+                        count--;
+                        if (count === 0){
+                            likeCountSpan.text('赞');
+                        }else {
+                            likeCountSpan.text(count);
+                        }
+
                     }
                 }
             } else {
@@ -221,4 +231,10 @@ function commentLike(e) {
         dataType: "json"
     });
 
+}
+
+
+function redirect(e) {
+    let href = e.getAttribute("href");
+    window.location.href = "http://localhost:8080" + href;
 }

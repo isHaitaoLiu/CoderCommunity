@@ -9,8 +9,6 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
-import java.util.Date;
-
 /**
  * @program: codercommunity
  * @description: 通知消息生产者
@@ -34,15 +32,15 @@ public class NotificationMessageProducer {
     public static class sendCallBack implements ListenableFutureCallback<SendResult<String, Object>>{
         @Override
         public void onFailure(Throwable ex) {
-            log.error("{}, {}", ex.getMessage(), new Date());
+            log.error("=== 发送消息失败：{} ===", ex.getMessage());
         }
 
         @Override
         public void onSuccess(SendResult<String, Object> result) {
             if (result == null){
-                log.info("发送空消息，{}", new Date());
+                log.info("=== 发送空消息 ===");
             }else {
-                log.info("发送{}消息成功 - {}", result.getRecordMetadata().topic(), new Date());
+                log.info("=== 发送{}消息成功 ===", result.getRecordMetadata().topic());
             }
         }
     }
