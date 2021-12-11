@@ -22,10 +22,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -244,9 +241,11 @@ public class QuestionServiceImpl implements QuestionService {
             NotificationMessage notificationMessage = new NotificationMessage();
             notificationMessage.setTopic(KafkaNotificationTopicEnum.TOPIC_LIKE_QUESTION.getTopic());
             notificationMessage.setNotifier(userId);
-            Question question = questionMapper.selectById(questionId);
-            notificationMessage.setReceiver(question.getCreator());
             notificationMessage.setOuterId(questionId);
+            //receiver由questionId查询处理
+            Map<String, Object> data = new HashMap<>();
+            data.put("questionId", questionId);
+            notificationMessage.setData(data);
             notificationMessageProducer.sendMessage(notificationMessage);
         }
         return true;

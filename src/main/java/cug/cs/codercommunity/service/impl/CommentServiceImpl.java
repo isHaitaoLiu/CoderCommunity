@@ -170,10 +170,10 @@ public class CommentServiceImpl implements CommentService {
             NotificationMessage notificationMessage = new NotificationMessage();
             notificationMessage.setTopic(KafkaNotificationTopicEnum.TOPIC_LIKE_COMMENT.getTopic());
             notificationMessage.setNotifier(userId);
-            Comment comment = commentMapper.selectById(commentId);
-            notificationMessage.setReceiver(comment.getCommentator());
-            Question question = questionMapper.selectById(comment.getParentId());
-            notificationMessage.setOuterId(question.getId());
+            //其他数据由commentId处理
+            Map<String, Object> data = new HashMap<>();
+            data.put("commentId", commentId);
+            notificationMessage.setData(data);
             notificationMessageProducer.sendMessage(notificationMessage);
         }
         return true;

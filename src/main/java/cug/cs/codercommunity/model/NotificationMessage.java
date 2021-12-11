@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 /**
  * @program: codercommunity
  * @description: 通知消息实体类
@@ -23,4 +25,6 @@ public class NotificationMessage {
     private Integer notifier;
     //消息接收者
     private Integer receiver;
+    //其他数据
+    private Map<String, Object> data;
 }
