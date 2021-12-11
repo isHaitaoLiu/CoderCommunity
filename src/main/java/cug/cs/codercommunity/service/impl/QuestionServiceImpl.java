@@ -176,7 +176,8 @@ public class QuestionServiceImpl implements QuestionService {
         //设置点赞数
         Integer likeCount = redisUtils.getAndSetQuestionLikeCount(question.getId(), question.getLikeCount());
         questionVO.setLikeCount(likeCount);
-
+        Integer viewCount = redisUtils.getAndSetQuestionViewCount(question.getId(), question.getViewCount());
+        questionVO.setViewCount(viewCount);
         return questionVO;
     }
 
@@ -199,8 +200,9 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public void incView(Integer id) {
-        Question question = questionMapper.selectById(id);
-        questionMapper.incViewCount(question);
+        //Question question = questionMapper.selectById(id);
+        //questionMapper.incViewCount(question);
+        redisUtils.incrementQuestionViewCount(id);
         //更新分数
         redisUtils.updateQuestionScoreByType(id, UpdateScoreTypeEnum.VIEW);
     }
@@ -224,8 +226,6 @@ public class QuestionServiceImpl implements QuestionService {
         }).collect(Collectors.toList());
         return relatedQuestionVO;
     }
-
-
 
     /*
      * @Author sakura

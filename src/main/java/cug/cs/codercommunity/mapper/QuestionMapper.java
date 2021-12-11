@@ -24,4 +24,6 @@ public interface QuestionMapper extends BaseMapper<Question>{
     Integer selectLikeCount(Integer questionId);
 
     List<Question> selectHotQuestions(Integer offset, Integer size);
+
+    Integer selectViewCount(Integer questionId);
 }

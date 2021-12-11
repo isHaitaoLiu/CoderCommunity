@@ -144,6 +144,30 @@ public class RedisUtils {
         }
     }
 
+    public void incrementQuestionViewCount(Integer questionId){
+        Boolean hasKey = redisTemplate.opsForHash().hasKey(RedisKeyEnum.MAP_QUESTION_VIEW_COUNT.getKey(), String.valueOf(questionId));
+        if (Boolean.FALSE.equals(hasKey)){
+            Integer dbCount = questionMapper.selectViewCount(questionId);
+            if (dbCount == null){
+                dbCount = 0;
+            }
+            redisTemplate.opsForHash().put(RedisKeyEnum.MAP_QUESTION_VIEW_COUNT.getKey(), String.valueOf(questionId), dbCount);
+        }
+        redisTemplate.opsForHash().increment(RedisKeyEnum.MAP_QUESTION_VIEW_COUNT.getKey(), String.valueOf(questionId), 1L);
+    }
+
+
+    public Integer getAndSetQuestionViewCount(Integer questionId, Integer dbViewCount){
+        Object viewCount = redisTemplate.opsForHash().get(RedisKeyEnum.MAP_QUESTION_VIEW_COUNT.getKey(), String.valueOf(questionId));
+        if (viewCount == null){
+            redisTemplate.opsForHash().put(RedisKeyEnum.MAP_QUESTION_VIEW_COUNT.getKey(), String.valueOf(questionId), dbViewCount);
+            return dbViewCount;
+        }
+        else {
+            return (Integer) viewCount;
+        }
+    }
+
 
     /*
      * @Author sakura

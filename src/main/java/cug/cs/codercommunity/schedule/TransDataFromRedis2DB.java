@@ -51,12 +51,13 @@ public class TransDataFromRedis2DB {
         Long row2 = updateQuestionLikeCountFromRedis();
         Long row3 = updateCommentLikeFromRedis();
         Long row4 = updateCommentLikeCountFromRedis();
-        log.info("======= 点赞数据持久化定时任务结束，处理问题点赞详情数：{}, 问题点赞数：{}，评论点赞详情数{}, 评论点赞数{} ======", row1, row2, row3, row4);
+        Long row5 = updateQuestionViewCountFromRedis();
+        log.info("======= 点赞数据持久化定时任务结束，处理问题点赞详情数：{}, 问题点赞数：{}，评论点赞详情数{}, 评论点赞数{}, 问题浏览数{} ======", row1, row2, row3, row4, row5);
     }
 
 
     @Transactional
-    public Long updateQuestionLikeFromRedis() {
+    Long updateQuestionLikeFromRedis() {
         Long counter = 0L;
         QuestionLike questionLike = new QuestionLike();
         Map<Object, Object> map = redisUtils.getAllKeyValues(RedisKeyEnum.MAP_QUESTION_LIKE);
@@ -76,7 +77,7 @@ public class TransDataFromRedis2DB {
 
 
     @Transactional
-    public Long updateQuestionLikeCountFromRedis() {
+    Long updateQuestionLikeCountFromRedis() {
         Long counter = 0L;
         Map<Object, Object> map = redisUtils.getAllKeyValues(RedisKeyEnum.MAP_QUESTION_LIKE);
         for (Object key : map.keySet()) {
@@ -92,7 +93,7 @@ public class TransDataFromRedis2DB {
     }
 
     @Transactional
-    public Long updateCommentLikeFromRedis() {
+    Long updateCommentLikeFromRedis() {
         Long counter = 0L;
         CommentLike commentLike = new CommentLike();
         Map<Object, Object> map = redisUtils.getAllKeyValues(RedisKeyEnum.MAP_COMMENT_LIKE);
@@ -111,7 +112,7 @@ public class TransDataFromRedis2DB {
     }
 
     @Transactional
-    public Long updateCommentLikeCountFromRedis(){
+    Long updateCommentLikeCountFromRedis(){
         Long counter = 0L;
         Map<Object, Object> map = redisUtils.getAllKeyValues(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT);
         for (Object key : map.keySet()) {
@@ -123,6 +124,22 @@ public class TransDataFromRedis2DB {
             counter += commentMapper.updateById(comment);
         }
         redisUtils.delete(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT);
+        return counter;
+    }
+
+    @Transactional
+    Long updateQuestionViewCountFromRedis(){
+        Long counter = 0L;
+        Map<Object, Object> map = redisUtils.getAllKeyValues(RedisKeyEnum.MAP_QUESTION_VIEW_COUNT);
+        for (Object key : map.keySet()) {
+            Integer keyInteger = Integer.valueOf((String) key);
+            Question question = questionMapper.selectById(keyInteger);
+            Integer viewCount = (Integer) map.get(key);
+            question.setViewCount(viewCount);
+            question.setGmtModified(new Date());
+            counter += questionMapper.updateById(question);
+        }
+        redisUtils.delete(RedisKeyEnum.MAP_QUESTION_VIEW_COUNT);
         return counter;
     }
 }

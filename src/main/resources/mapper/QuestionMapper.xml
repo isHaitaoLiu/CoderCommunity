@@ -35,5 +35,8 @@
         select * from question order by (view_count * 1 + like_count * 2 + comment_count * 3) desc limit #{offset}, #{size}
     </select>
 
+    <select id="selectViewCount" resultType="integer">
+        select view_count from question where id = #{questionId}
+    </select>
 
 </mapper>
