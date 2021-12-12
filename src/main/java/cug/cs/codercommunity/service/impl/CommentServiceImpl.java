@@ -119,7 +119,7 @@ public class CommentServiceImpl implements CommentService {
         commentQueryWrapper
                 .eq("parent_id", id)
                 .eq("type", commentType.getType())
-                .orderByDesc("gmt_create");
+                .orderByAsc("gmt_create");
 
         List<Comment> comments = commentMapper.selectList(commentQueryWrapper);
         if (comments.size() == 0){

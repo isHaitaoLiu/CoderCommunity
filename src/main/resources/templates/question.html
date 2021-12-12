@@ -106,7 +106,7 @@
                                                                           th:status="${comment.likeStatus}"
                                                                           th:style="${comment.likeStatus} == '1' ? 'color:blue' : 'color:black'"
                                                                           onclick="commentLike(this)"></span>
-                                    <span th:id="'comment-like-count-span-' + ${comment.id}" th:text="${comment.likeCount == 0 ? '赞' : comment.likeCount}"></span>
+                                    <span th:id="'comment-like-count-span-' + ${comment.id}" th:text="${comment.likeCount} ? ${comment.likeCount} : 0"></span>
                                 </span>
                             </div>
                             <!-- 二级评论 -->

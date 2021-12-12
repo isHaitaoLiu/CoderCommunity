@@ -9,14 +9,14 @@ import cug.cs.codercommunity.mapper.QuestionLikeMapper;
 import cug.cs.codercommunity.mapper.QuestionMapper;
 import cug.cs.codercommunity.model.Question;
 import cug.cs.codercommunity.vo.HotQuestionVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @program: codercommunity
@@ -25,6 +25,7 @@ import java.util.Set;
  * @create: 2021-12-09 20:21
  **/
 
+@Slf4j
 @Component
 public class RedisUtils {
     @Autowired
@@ -246,5 +247,10 @@ public class RedisUtils {
 
     public Boolean delete(RedisKeyEnum keyEnum){
         return redisTemplate.delete(keyEnum.getKey());
+    }
+
+    public Boolean deleteNoUpdatedHashKeyByLua(String key, String hashKey, Integer value){
+        RedisScript<Boolean> redisScript = RedisScript.of(new ClassPathResource("lua/deleteNoUpdatedHashKey.lua"), Boolean.class);
+        return redisTemplate.execute(redisScript, Arrays.asList(key, hashKey), value);
     }
 }

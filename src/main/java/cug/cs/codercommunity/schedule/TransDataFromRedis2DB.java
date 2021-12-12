@@ -63,15 +63,19 @@ public class TransDataFromRedis2DB {
         Map<Object, Object> map = redisUtils.getAllKeyValues(RedisKeyEnum.MAP_QUESTION_LIKE);
         for (Object key : map.keySet()) {
             String keyStr = (String) key;
+            int likeStatus = (int)map.get(key);
             String[] strings = keyStr.split(":");
             questionLike.setUserId(Integer.valueOf(strings[0]));
             questionLike.setQuestionId(Integer.valueOf(strings[1]));
-            questionLike.setStatus((int)map.get(key));
+            questionLike.setStatus(likeStatus);
             questionLike.setGmtCreate(new Date());
             questionLike.setGmtModified(new Date());
             counter += questionLikeMapper.insertOrUpdateLike(questionLike);
+            redisUtils.deleteNoUpdatedHashKeyByLua(RedisKeyEnum.MAP_QUESTION_LIKE.getKey(), keyStr, likeStatus);
+            //RedisScript<Object> redisScript = RedisScript.of(new ClassPathResource("src/main/resources/lua"));
+            //redisTemplate.execute(redisScript, Collections.singletonList(RedisKeyEnum.MAP_QUESTION_LIKE.getKey()), key, map.get(key));
         }
-        redisUtils.delete(RedisKeyEnum.MAP_QUESTION_LIKE);
+        //redisUtils.delete(RedisKeyEnum.MAP_QUESTION_LIKE);
         return counter;
     }
 
@@ -82,13 +86,15 @@ public class TransDataFromRedis2DB {
         Map<Object, Object> map = redisUtils.getAllKeyValues(RedisKeyEnum.MAP_QUESTION_LIKE);
         for (Object key : map.keySet()) {
             Integer keyInteger = Integer.valueOf((String) key);
+            int likeCount = (Integer) map.get(key);
             Question question = questionMapper.selectById(keyInteger);
-            Integer likeCount = (Integer) map.get(key);
             question.setLikeCount(likeCount);
             question.setGmtModified(new Date());
             counter += questionMapper.updateLikeCount(question);
+            redisUtils.deleteNoUpdatedHashKeyByLua(RedisKeyEnum.MAP_QUESTION_LIKE.getKey(), (String) key, likeCount);
+
         }
-        redisUtils.delete(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT);
+        //redisUtils.delete(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT);
         return counter;
     }
 
@@ -99,15 +105,17 @@ public class TransDataFromRedis2DB {
         Map<Object, Object> map = redisUtils.getAllKeyValues(RedisKeyEnum.MAP_COMMENT_LIKE);
         for (Object key : map.keySet()) {
             String keyStr = (String) key;
+            int likeStatus = (int)map.get(key);
             String[] strings = keyStr.split(":");
             commentLike.setUserId(Integer.valueOf(strings[0]));
             commentLike.setCommentId(Integer.valueOf(strings[1]));
-            commentLike.setStatus((int)map.get(key));
+            commentLike.setStatus(likeStatus);
             commentLike.setGmtCreate(new Date());
             commentLike.setGmtModified(new Date());
             counter += commentLikeMapper.insertOrUpdateLike(commentLike);
+            redisUtils.deleteNoUpdatedHashKeyByLua(RedisKeyEnum.MAP_COMMENT_LIKE.getKey(), keyStr, likeStatus);
         }
-        redisUtils.delete(RedisKeyEnum.MAP_COMMENT_LIKE);
+        //redisUtils.delete(RedisKeyEnum.MAP_COMMENT_LIKE);
         return counter;
     }
 
@@ -117,13 +125,14 @@ public class TransDataFromRedis2DB {
         Map<Object, Object> map = redisUtils.getAllKeyValues(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT);
         for (Object key : map.keySet()) {
             Integer keyInteger = Integer.valueOf((String) key);
-            Comment comment = commentMapper.selectById(keyInteger);
             Integer likeCount = (Integer) map.get(key);
+            Comment comment = commentMapper.selectById(keyInteger);
             comment.setLikeCount(likeCount);
             comment.setGmtModified(new Date());
             counter += commentMapper.updateById(comment);
+            redisUtils.deleteNoUpdatedHashKeyByLua(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT.getKey(), (String) key, likeCount);
+
         }
-        redisUtils.delete(RedisKeyEnum.MAP_COMMENT_LIKE_COUNT);
         return counter;
     }
 
@@ -133,13 +142,14 @@ public class TransDataFromRedis2DB {
         Map<Object, Object> map = redisUtils.getAllKeyValues(RedisKeyEnum.MAP_QUESTION_VIEW_COUNT);
         for (Object key : map.keySet()) {
             Integer keyInteger = Integer.valueOf((String) key);
-            Question question = questionMapper.selectById(keyInteger);
             Integer viewCount = (Integer) map.get(key);
+            Question question = questionMapper.selectById(keyInteger);
             question.setViewCount(viewCount);
             question.setGmtModified(new Date());
             counter += questionMapper.updateById(question);
+            redisUtils.deleteNoUpdatedHashKeyByLua(RedisKeyEnum.MAP_QUESTION_VIEW_COUNT.getKey(), (String) key, viewCount);
         }
-        redisUtils.delete(RedisKeyEnum.MAP_QUESTION_VIEW_COUNT);
+        //redisUtils.delete(RedisKeyEnum.MAP_QUESTION_VIEW_COUNT);
         return counter;
     }
 }
